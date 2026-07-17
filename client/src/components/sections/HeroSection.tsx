@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom"; 
 function HeroSection() {
+const navigate = useNavigate();
   return (
     <section className="bg-gray-50">
       <div className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-between px-6 py-16">
@@ -21,7 +23,7 @@ function HeroSection() {
           </p>
 
           <div className="flex gap-4">
-            <button className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700">
+            <button className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700" onClick={() => navigate("/create-interview")}>
               Start Interview
             </button>
 
