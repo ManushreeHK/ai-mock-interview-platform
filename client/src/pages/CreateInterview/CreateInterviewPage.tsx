@@ -3,6 +3,7 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import FileUpload from "../../components/common/FileUpload";
 import Button from "../../components/common/Button";
+import api from "../../services/api";
 
 function CreateInterviewPage() {
   const [formData, setFormData] = useState({
@@ -24,6 +25,8 @@ function CreateInterviewPage() {
     position: "",
     resume: "",
   });
+
+  const [loading, setLoading] = useState(false);
 
   const roles = [
     "Frontend Developer",
@@ -64,7 +67,36 @@ function CreateInterviewPage() {
     "Go",
   ];
 
-  const handleSubmit = () => {
+  const handleSelectChange = (
+    field: keyof typeof formData,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
+
+  const handleResumeChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      resume: e.target.files?.[0] || null,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      resume: "",
+    }));
+  };
+
+  const handleSubmit = async () => {
     const newErrors = {
       role: "",
       experience: "",
@@ -79,16 +111,16 @@ function CreateInterviewPage() {
       newErrors.role = "Please select a role.";
 
     if (!formData.experience)
-      newErrors.experience = "Please select your experience.";
+      newErrors.experience = "Please select experience.";
 
     if (!formData.difficulty)
-      newErrors.difficulty = "Please select interview difficulty.";
+      newErrors.difficulty = "Please select difficulty.";
 
     if (!formData.domain)
-      newErrors.domain = "Please select a domain.";
+      newErrors.domain = "Please select domain.";
 
     if (!formData.language)
-      newErrors.language = "Please select a programming language.";
+      newErrors.language = "Please select programming language.";
 
     if (!formData.position.trim())
       newErrors.position = "Position is required.";
@@ -104,24 +136,30 @@ function CreateInterviewPage() {
 
     if (hasErrors) return;
 
-    console.log("Interview Request:", formData);
+    try {
+      setLoading(true);
 
-    alert("✅ Validation Successful! Ready to call backend.");
+      const response = await api.post(
+        "/interview/generate",
+        formData
+      );
+
+      console.log("Response:", response.data);
+
+      alert("✅ Interview Generated Successfully!");
+
+      // Later:
+      // navigate("/interview", {
+      //   state: response.data,
+      // });
+
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
   };
-    const handleSelectChange = (
-    field: keyof typeof formData,
-    value: string
-    ) => {
-    setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-    }));
-
-    setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-    }));
-    };
 
   return (
     <div className="min-h-screen bg-gray-100 px-6 py-12">
@@ -131,9 +169,8 @@ function CreateInterviewPage() {
           Create Your AI Interview
         </h1>
 
-        <p className="mt-3 mb-10 text-lg text-gray-600">
-          Fill in the details below and let AI generate a personalized mock
-          interview for you.
+        <p className="mb-10 mt-3 text-lg text-gray-600">
+          Fill in the details below and let AI generate a personalized mock interview.
         </p>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -143,7 +180,9 @@ function CreateInterviewPage() {
             options={roles}
             value={formData.role}
             error={errors.role}
-           onChange={(e) => handleSelectChange("role", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("role", e.target.value)
+            }
           />
 
           <Select
@@ -151,7 +190,9 @@ function CreateInterviewPage() {
             options={experiences}
             value={formData.experience}
             error={errors.experience}
-            onChange={(e) => handleSelectChange("experience", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("experience", e.target.value)
+            }
           />
 
           <Select
@@ -159,7 +200,9 @@ function CreateInterviewPage() {
             options={difficulties}
             value={formData.difficulty}
             error={errors.difficulty}
-            onChange={(e) => handleSelectChange("difficulty", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("difficulty", e.target.value)
+            }
           />
 
           <Select
@@ -167,7 +210,9 @@ function CreateInterviewPage() {
             options={domains}
             value={formData.domain}
             error={errors.domain}
-            onChange={(e) => handleSelectChange("domain", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("domain", e.target.value)
+            }
           />
 
           <Select
@@ -175,7 +220,9 @@ function CreateInterviewPage() {
             options={languages}
             value={formData.language}
             error={errors.language}
-            onChange={(e) => handleSelectChange("language", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("language", e.target.value)
+            }
           />
 
           <Input
@@ -183,25 +230,31 @@ function CreateInterviewPage() {
             placeholder="e.g. Senior Frontend Developer"
             value={formData.position}
             error={errors.position}
-            onChange={(e) => handleSelectChange("position", e.target.value)}
+            onChange={(e) =>
+              handleSelectChange("position", e.target.value)
+            }
           />
 
           <div className="md:col-span-2">
             <FileUpload
               label="Resume *"
               error={errors.resume}
-              onChange={(e) => handleSelectChange("resume", e.target.value)}
+              onChange={handleResumeChange}
             />
           </div>
 
           <div className="md:col-span-2 mt-4">
-            <Button onClick={handleSubmit}>
-              🚀 Generate AI Interview
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading
+                ? "Generating Interview..."
+                : "🚀 Generate AI Interview"}
             </Button>
           </div>
 
         </div>
-
       </div>
     </div>
   );
