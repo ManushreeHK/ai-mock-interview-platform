@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import FileUpload from "../../components/common/FileUpload";
@@ -6,6 +7,8 @@ import Button from "../../components/common/Button";
 import api from "../../services/api";
 
 function CreateInterviewPage() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     role: "",
     experience: "",
@@ -139,19 +142,23 @@ function CreateInterviewPage() {
     try {
       setLoading(true);
 
-      const response = await api.post(
-        "/interview/generate",
-        formData
-      );
+      const response = await api.post("/interview/generate", {
+        role: formData.role,
+        experience: formData.experience,
+        difficulty: formData.difficulty,
+        domain: formData.domain,
+        language: formData.language,
+        position: formData.position,
+      });
 
       console.log("Response:", response.data);
 
-      alert("✅ Interview Generated Successfully!");
-
-      // Later:
-      // navigate("/interview", {
-      //   state: response.data,
-      // });
+      navigate("/interview", {
+        state: {
+          questions: response.data.questions,
+          interviewDetails: formData,
+        },
+      });
 
     } catch (error) {
       console.error(error);
