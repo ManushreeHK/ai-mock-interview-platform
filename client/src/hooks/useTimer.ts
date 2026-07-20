@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 
 type UseTimerProps = {
   duration: number;
@@ -18,7 +18,7 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "TICK":
       return {
-        timeLeft: state.timeLeft - 1,
+        timeLeft: Math.max(state.timeLeft - 1, 0),
       };
 
     case "RESET":
@@ -40,32 +40,39 @@ export function useTimer({
     timeLeft: duration,
   });
 
-  // Reset automatically whenever question changes
+  const callbackRef = useRef(onTimeUp);
+
+  useEffect(() => {
+    callbackRef.current = onTimeUp;
+  }, [onTimeUp]);
+
+  // Reset timer whenever question changes
   useEffect(() => {
     dispatch({
       type: "RESET",
       payload: duration,
     });
-  }, [resetKey, duration]);
+  }, [duration, resetKey]);
 
   // Countdown
   useEffect(() => {
-    if (state.timeLeft <= 0) {
-      onTimeUp?.();
+    if (state.timeLeft === 0) {
+      callbackRef.current?.();
       return;
     }
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       dispatch({
         type: "TICK",
       });
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [state.timeLeft, onTimeUp]);
+  }, [state.timeLeft]);
 
   return {
     minutes: String(Math.floor(state.timeLeft / 60)).padStart(2, "0"),
     seconds: String(state.timeLeft % 60).padStart(2, "0"),
+    timeLeft: state.timeLeft,
   };
 }

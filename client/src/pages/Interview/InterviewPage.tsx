@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { InterviewAnswer } from "../../types/interview";
 
 import InterviewHeader from "../../components/interview/InterviewHeader";
 import InterviewNavigation from "../../components/interview/InterviewNavigation";
@@ -9,6 +10,7 @@ import QuestionCard from "../../components/interview/QuestionCard";
 import RecordingSection from "../../components/interview/RecordingSection";
 
 import { useInterview } from "../../hooks/useInterview";
+import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { useTimer } from "../../hooks/useTimer";
 
 function InterviewPage() {
@@ -16,8 +18,14 @@ function InterviewPage() {
   const navigate = useNavigate();
 
   const questions: string[] = location.state?.questions || [];
-
   const interviewDetails = location.state?.interviewDetails;
+
+  const [answers, setAnswers] = useState<InterviewAnswer[]>(
+    questions.map((question) => ({
+      question,
+      answer: "",
+    }))
+  );
 
   const {
     currentQuestion,
@@ -25,35 +33,60 @@ function InterviewPage() {
     previousQuestion,
   } = useInterview(questions.length);
 
-const handleTimeUp = useCallback(() => {
-  if (currentQuestion < questions.length - 1) {
-    nextQuestion();
-  } else {
-    alert("🎉 Interview Completed!");
-  }
-}, [currentQuestion, questions.length, nextQuestion]);
+  const {
+    transcript,
+    isListening,
+    startListening,
+    stopListening,
+    clearTranscript,
+  } = useSpeechRecognition();
 
- const { minutes, seconds } = useTimer({
-  duration: 120,
-  resetKey: currentQuestion,
-  onTimeUp: handleTimeUp,
-})
+  const handleTimeUp = useCallback(() => {
+    stopListening();
 
-  if (questions.length === 0) {
+    if (currentQuestion < questions.length - 1) {
+      nextQuestion();
+    } else {
+      alert("🎉 Interview Completed!");
+    }
+  }, [
+    currentQuestion,
+    questions.length,
+    stopListening,
+    nextQuestion,
+  ]);
+
+  const { minutes, seconds } = useTimer({
+    duration: 120,
+    resetKey: currentQuestion,
+    onTimeUp: handleTimeUp,
+  });
+
+  // Save answer continuously while user speaks
+  // Clear ONLY live transcript when question changes
+useEffect(() => {
+  clearTranscript();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [currentQuestion]);
+
+
+
+  if (!questions.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="bg-white rounded-xl shadow-lg p-10 text-center">
-          <h2 className="text-3xl font-bold mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+        <div className="rounded-xl bg-white p-10 shadow-xl text-center">
+          <h2 className="mb-4 text-3xl font-bold">
             No Interview Found
           </h2>
 
-          <p className="text-gray-500 mb-6">
+          <p className="mb-6 text-gray-500">
             Please create an interview first.
           </p>
 
           <button
             onClick={() => navigate("/create-interview")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
+            className="rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
           >
             Create Interview
           </button>
@@ -62,15 +95,64 @@ const handleTimeUp = useCallback(() => {
     );
   }
 
+const currentAnswer =
+  isListening
+    ? transcript
+    : answers[currentQuestion].answer;
+
+const handlePrevious = () => {
+  stopListening();
+  previousQuestion();
+};
+
+const handleNext = () => {
+  stopListening();
+  nextQuestion();
+};
+
+const handleFinish = () => {
+  stopListening();
+
+  const finalAnswers = [...answers];
+  navigate("/results", {
+    state: {
+      interviewDetails,
+      answers: finalAnswers,
+    },
+  });
+};
+const handleAnswerChange = (value: string) => {
+  setAnswers((prev) => {
+    const updated = [...prev];
+
+    updated[currentQuestion] = {
+      ...updated[currentQuestion],
+      answer: value,
+    };
+
+    return updated;
+  });
+};
+
+const handleStopRecording = () => {
+  stopListening();
+
+  setAnswers((prev) => {
+    const updated = [...prev];
+
+    updated[currentQuestion] = {
+      ...updated[currentQuestion],
+      answer: transcript,
+    };
+
+    return updated;
+  });
+};
   return (
-    <div className="min-h-screen bg-slate-100 py-10 px-6">
+    <div className="min-h-screen bg-slate-100 px-6 py-10">
+      <div className="mx-auto max-w-6xl rounded-2xl bg-white p-10 shadow-xl">
 
-      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-10">
-
-        {/* Header */}
-
-        <div className="flex justify-between items-center mb-10">
-
+        <div className="mb-10 flex items-center justify-between">
           <InterviewHeader
             role={interviewDetails?.role || "Developer"}
           />
@@ -79,45 +161,35 @@ const handleTimeUp = useCallback(() => {
             minutes={minutes}
             seconds={seconds}
           />
-
         </div>
-
-        {/* Progress */}
 
         <InterviewProgress
           currentQuestion={currentQuestion}
           totalQuestions={questions.length}
         />
 
-        {/* Question */}
-
         <QuestionCard
           currentQuestion={currentQuestion}
           question={questions[currentQuestion]}
         />
 
-        {/* Recording */}
-
-        <RecordingSection />
-
-        {/* Navigation */}
+       <RecordingSection
+  answer={currentAnswer}
+  isListening={isListening}
+  onAnswerChange={handleAnswerChange}
+  onStart={startListening}
+  onStop={handleStopRecording}
+/>
 
         <InterviewNavigation
           currentQuestion={currentQuestion}
           totalQuestions={questions.length}
-          onPrevious={() => {
-            previousQuestion();
-          }}
-          onNext={() => {
-            nextQuestion();
-          }}
-          onFinish={() => {
-            alert("🎉 Interview Completed!");
-          }}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onFinish={handleFinish}
         />
 
       </div>
-
     </div>
   );
 }
