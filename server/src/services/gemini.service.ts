@@ -1,16 +1,19 @@
-export async function generateInterviewQuestions(prompt: string) {
-  console.log(prompt); // optional
+import { GoogleGenAI } from "@google/genai";
 
-  return [
-    "Tell me about yourself.",
-    "Explain Virtual DOM.",
-    "What are React Hooks?",
-    "Difference between useState and useReducer.",
-    "Explain closures.",
-    "What is hoisting?",
-    "Explain event bubbling.",
-    "Explain useEffect.",
-    "What is memoization?",
-    "Explain React Context API."
-  ];
+export async function generateInterviewQuestions(prompt: string) {
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY!,
+  });
+
+const response = await ai.models.generateContent({
+  model: "gemini-3.5-flash",
+  contents: prompt,
+});
+
+  const text = response.text ?? "";
+
+  return text
+    .split("\n")
+    .map((line) => line.replace(/^\d+\.\s*/, "").trim())
+    .filter((line) => line.length > 0);
 }

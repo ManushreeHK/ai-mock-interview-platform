@@ -1,6 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
-console.log("Gemini Key:", process.env.GEMINI_API_KEY);
+const key = process.env.GEMINI_API_KEY;
+
+console.log(
+  "Gemini Key Loaded:",
+  key ? `${key.substring(0, 4)}...` : "Not Found"
+);
 
 import app from "./app.js";
 
