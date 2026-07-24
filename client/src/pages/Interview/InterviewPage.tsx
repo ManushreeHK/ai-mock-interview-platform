@@ -8,6 +8,7 @@ import InterviewProgress from "../../components/interview/InterviewProgress";
 import InterviewTimer from "../../components/interview/InterviewTimer";
 import QuestionCard from "../../components/interview/QuestionCard";
 import RecordingSection from "../../components/interview/RecordingSection";
+import api from "../../services/api";
 
 import { useInterview } from "../../hooks/useInterview";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
@@ -110,16 +111,37 @@ const handleNext = () => {
   nextQuestion();
 };
 
-const handleFinish = () => {
+const handleFinish = async () => {
   stopListening();
 
-  const finalAnswers = [...answers];
-  navigate("/results", {
-    state: {
-      interviewDetails,
-      answers: finalAnswers,
-    },
-  });
+  try {
+    const finalAnswers = [...answers];
+
+    finalAnswers[currentQuestion] = {
+      ...finalAnswers[currentQuestion],
+      answer: transcript || finalAnswers[currentQuestion].answer,
+    };
+
+    const response = await api.post("/interview/evaluate", {
+      role: interviewDetails.role,
+      experience: interviewDetails.experience,
+      questions: finalAnswers.map((a) => a.question),
+      answers: finalAnswers.map((a) => a.answer),
+    });
+
+    console.log("Evaluation Response:", response.data);
+
+    navigate("/results", {
+      state: {
+        interviewDetails,
+        answers: finalAnswers,
+        evaluation: response.data.evaluation,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    alert("Unable to evaluate interview. Please try again.");
+  }
 };
 const handleAnswerChange = (value: string) => {
   setAnswers((prev) => {

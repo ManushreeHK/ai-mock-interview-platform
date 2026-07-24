@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { generateInterviewQuestions } from "../services/gemini.service.js"
+import {
+  generateInterviewQuestions,
+  evaluateInterviewAnswers,
+} from "../services/gemini.service.js";
 
 export const generateInterview = async (
   req: Request,
@@ -40,6 +43,39 @@ Return only the questions as a numbered list.
     res.status(500).json({
       success: false,
       message: "Failed to generate interview.",
+    });
+  }
+};
+
+export const evaluateInterview = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const {
+      role,
+      experience,
+      questions,
+      answers,
+    } = req.body;
+
+    const result = await evaluateInterviewAnswers({
+      role,
+      experience,
+      questions,
+      answers,
+    });
+
+    res.status(200).json({
+      success: true,
+      evaluation: result,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to evaluate interview.",
     });
   }
 };
