@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { login, getSession } from "../services/auth";
+import { useState,useEffect } from "react";
+import { login, getSession,currentUser } from "../services/auth";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
@@ -8,6 +8,20 @@ function Login() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+  async function checkUser() {
+    try {
+      const user = await currentUser();
+      console.log("Already signed in:", user);
+
+      navigate("/dashboard");
+    } catch {
+      console.log("No authenticated user");
+    }
+  }
+
+  checkUser();
+}, [navigate]);
 async function handleLogin(e: React.FormEvent) {
   e.preventDefault();
   
