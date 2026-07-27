@@ -1,4 +1,4 @@
-import StepCard from "../common/StepCard";
+import StepCard from "../ui/StepCard";
 
 const steps = [
   {

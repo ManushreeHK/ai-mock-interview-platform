@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { register } from "../services/auth";
+import { register } from "../../services/auth";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Button from "../../components/ui/Button";
 
 
 function Signup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ function Signup() {
     e.preventDefault();
 
     try {
-      await register(email, password);
+      await register(name,email, password);
       navigate("/verify", {
   state: {
     email,
@@ -34,6 +36,12 @@ function Signup() {
         <h1 className="mb-6 text-center text-3xl font-bold">
           Create Account
         </h1>
+        <input
+  className="mb-4 w-full rounded border p-3"
+  placeholder="Full Name"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+/>
 
         <input
           className="mb-4 w-full rounded border p-3"
@@ -50,9 +58,9 @@ function Signup() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button className="w-full rounded bg-blue-600 py-3 text-white">
+        <Button fullWidth>
           Create Account
-        </button>
+        </Button>
 
         <p className="mt-4 text-center">
           Already have an account?{" "}

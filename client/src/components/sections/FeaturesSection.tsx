@@ -1,4 +1,4 @@
-import FeatureCard from "../common/FeatureCard";
+import FeatureCard from "../ui/FeatureCard";
 import {
   Brain,
   FileText,

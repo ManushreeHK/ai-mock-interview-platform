@@ -1,15 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import VerifyEmail from "./pages/VerifyEmail";
-import LandingPage from "./pages/LandingPages/LandingPages";
+import Login from "./pages/Login/LoginPage";
+import Signup from "./pages/Signup/SignupPage";
+import VerifyEmail from "./pages/VerifyEmail/VerifyEmailPage";
+import LandingPage from "./pages/Landing/LandingPage";
 import CreateInterviewPage from "./pages/CreateInterview/CreateInterviewPage";
 import InterviewPage from "./pages/Interview/InterviewPage";
 import ResultsPage from "./pages/Results/ResultsPage";
 import PublicLayout from "./components/layout/PublicLayout"
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard/DashboardPage";
 
 function App() {
   return (

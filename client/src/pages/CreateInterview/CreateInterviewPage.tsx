@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Input from "../../components/common/Input";
-import Select from "../../components/common/Select";
-import FileUpload from "../../components/common/FileUpload";
-import Button from "../../components/common/Button";
+import Input from "../../components/ui/Input";
+import Select from "../../components/ui/Select";
+import FileUpload from "../../components/ui/FileUpload";
+import Button from "../../components/ui/Button";
 import api from "../../services/api";
 
 function CreateInterviewPage() {

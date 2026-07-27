@@ -1,0 +1,26 @@
+import { useNavigate } from "react-router-dom";
+import Button from "../ui/Button";
+
+function WelcomeCard() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="rounded-xl bg-white p-8 shadow-md">
+      <h1 className="text-3xl font-bold">
+        👋 Welcome back!
+      </h1>
+
+      <p className="mt-2 text-gray-600">
+        Ready to ace your next interview?
+      </p>
+
+      <Button
+        onClick={() => navigate("/create-interview")}
+      >
+        + Start New Interview
+      </Button>
+    </div>
+  );
+}
+
+export default WelcomeCard;

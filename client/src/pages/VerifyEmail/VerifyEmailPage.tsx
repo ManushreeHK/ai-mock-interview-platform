@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { verifyEmail } from "../services/auth";
+import { verifyEmail } from "../../services/auth";
 
 function VerifyEmail() {
   const navigate = useNavigate();

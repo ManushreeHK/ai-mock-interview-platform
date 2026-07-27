@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"; 
+import Button from "../ui/Button";
 function HeroSection() {
 const navigate = useNavigate();
   return (
@@ -23,9 +24,9 @@ const navigate = useNavigate();
           </p>
 
           <div className="flex gap-4">
-            <button className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700" onClick={() => navigate("/create-interview")}>
+           <Button size="lg">
               Start Interview
-            </button>
+            </Button>
 
             <button className="rounded-lg border border-gray-300 px-6 py-3 font-semibold transition hover:bg-gray-100">
               Learn More

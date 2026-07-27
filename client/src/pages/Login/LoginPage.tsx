@@ -1,7 +1,8 @@
 import { useState,useEffect } from "react";
-import { login, getSession,currentUser } from "../services/auth";
+import { login, getSession,currentUser } from "../../services/auth";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Button from "../../components/ui/Button";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -71,11 +72,9 @@ console.log(session);
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
-          className="w-full rounded bg-blue-600 py-3 text-white"
-        >
-          Login
-        </button>
+          <Button fullWidth>
+            Login
+          </Button>
             <p className="mt-4 text-center">
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-blue-600">
