@@ -1,4 +1,3 @@
-
 import RecentInterviews from "../../components/dashboard/RecentInterviews";
 import WelcomeBanner from "../../components/dashboard/WelcomeBanner";
 import StatsGrid from "../../components/dashboard/StatsGrid";
@@ -8,12 +7,6 @@ import QuickActions from "../../components/dashboard/QuickActions";
 import Achievements from "../../components/dashboard/Achievements";
 
 function Dashboard() {
-  const stats = {
-    totalInterviews: 12,
-    averageScore: 84,
-    bestScore: 96,
-  };
-
   const recentInterviews = [
     {
       id: 1,
@@ -36,7 +29,7 @@ function Dashboard() {
   ];
 
   return (
-     <div className="space-y-8">
+    <div className="space-y-8">
       <WelcomeBanner />
 
       <StatsGrid />
@@ -48,13 +41,14 @@ function Dashboard() {
 
         <AIInsights />
       </div>
-        <div className="grid gap-8 lg:grid-cols-3">
-    <div className="lg:col-span-2">
-      <QuickActions />
-    </div>
 
-    <Achievements />
-  </div>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <QuickActions />
+        </div>
+
+        <Achievements />
+      </div>
 
       <RecentInterviews interviews={recentInterviews} />
     </div>

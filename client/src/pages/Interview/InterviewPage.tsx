@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import type { InterviewAnswer } from "../../types/interview";
 
 import InterviewHeader from "../../components/interview/InterviewHeader";
-import InterviewNavigation from "../../components/interview/InterviewNavigation";
 import InterviewProgress from "../../components/interview/InterviewProgress";
 import InterviewTimer from "../../components/interview/InterviewTimer";
 import QuestionCard from "../../components/interview/QuestionCard";
 import RecordingSection from "../../components/interview/RecordingSection";
-import api from "../../services/api";
+import InterviewNavigation from "../../components/interview/InterviewNavigation";
 
 import { useInterview } from "../../hooks/useInterview";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { useTimer } from "../../hooks/useTimer";
 
+import api from "../../services/api";
+
 function InterviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+const [isSubmitting, setIsSubmitting] = useState(false);
   const questions: string[] = location.state?.questions || [];
   const interviewDetails = location.state?.interviewDetails;
 
@@ -42,41 +45,70 @@ function InterviewPage() {
     clearTranscript,
   } = useSpeechRecognition();
 
-  const handleTimeUp = useCallback(() => {
-    stopListening();
 
-    if (currentQuestion < questions.length - 1) {
-      nextQuestion();
-    } else {
-      alert("🎉 Interview Completed!");
-    }
-  }, [
-    currentQuestion,
-    questions.length,
-    stopListening,
-    nextQuestion,
-  ]);
+const submitInterview = useCallback(async () => {
+  if (isSubmitting) return;
+
+  setIsSubmitting(true);
+  stopListening();
+
+  try {
+    const finalAnswers = [...answers];
+
+    finalAnswers[currentQuestion] = {
+      ...finalAnswers[currentQuestion],
+      answer:
+        transcript.trim() ||
+        finalAnswers[currentQuestion].answer,
+    };
+
+    const response = await api.post("/interview/evaluate", {
+      role: interviewDetails?.role,
+      experience: interviewDetails?.experience,
+      questions: finalAnswers.map((item) => item.question),
+      answers: finalAnswers.map((item) => item.answer),
+    });
+
+    navigate("/results", {
+      state: {
+        interviewDetails,
+        answers: finalAnswers,
+        evaluation: response.data.evaluation,
+      },
+    });
+  } catch (error) {
+    console.error("Interview submission failed:", error);
+    alert("Unable to evaluate the interview. Please try again.");
+    setIsSubmitting(false);
+  }
+}, [
+  answers,
+  currentQuestion,
+  transcript,
+  interviewDetails,
+  isSubmitting,
+  navigate,
+  stopListening,
+]);
+
+const handleTimeUp = useCallback(() => {
+  void submitInterview();
+}, [submitInterview]);
 
   const { minutes, seconds } = useTimer({
-    duration: 120,
-    resetKey: currentQuestion,
+    duration: 12,
+    resetKey: 0,
     onTimeUp: handleTimeUp,
   });
 
-  // Save answer continuously while user speaks
-  // Clear ONLY live transcript when question changes
-useEffect(() => {
-  clearTranscript();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [currentQuestion]);
-
-
+  useEffect(() => {
+    clearTranscript();
+  }, [currentQuestion, clearTranscript]);
 
   if (!questions.length) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
-        <div className="rounded-xl bg-white p-10 shadow-xl text-center">
+        <div className="rounded-xl bg-white p-10 text-center shadow-xl">
           <h2 className="mb-4 text-3xl font-bold">
             No Interview Found
           </h2>
@@ -96,83 +128,56 @@ useEffect(() => {
     );
   }
 
-const currentAnswer =
-  isListening
-    ? transcript
-    : answers[currentQuestion].answer;
+  const currentAnswer =
+    isListening
+      ? transcript
+      : answers[currentQuestion].answer;
 
-const handlePrevious = () => {
-  stopListening();
-  previousQuestion();
-};
+  const handleAnswerChange = (value: string) => {
+    setAnswers((prev) => {
+      const updated = [...prev];
 
-const handleNext = () => {
-  stopListening();
-  nextQuestion();
-};
+      updated[currentQuestion] = {
+        ...updated[currentQuestion],
+        answer: value,
+      };
 
-const handleFinish = async () => {
-  stopListening();
-
-  try {
-    const finalAnswers = [...answers];
-
-    finalAnswers[currentQuestion] = {
-      ...finalAnswers[currentQuestion],
-      answer: transcript || finalAnswers[currentQuestion].answer,
-    };
-
-    const response = await api.post("/interview/evaluate", {
-      role: interviewDetails.role,
-      experience: interviewDetails.experience,
-      questions: finalAnswers.map((a) => a.question),
-      answers: finalAnswers.map((a) => a.answer),
+      return updated;
     });
+  };
 
-    console.log("Evaluation Response:", response.data);
+  const handleStopRecording = () => {
+    stopListening();
 
-    navigate("/results", {
-      state: {
-        interviewDetails,
-        answers: finalAnswers,
-        evaluation: response.data.evaluation,
-      },
+    setAnswers((prev) => {
+      const updated = [...prev];
+
+      updated[currentQuestion] = {
+        ...updated[currentQuestion],
+        answer: transcript,
+      };
+
+      return updated;
     });
-  } catch (error) {
-    console.error(error);
-    alert("Unable to evaluate interview. Please try again.");
-  }
-};
-const handleAnswerChange = (value: string) => {
-  setAnswers((prev) => {
-    const updated = [...prev];
+  };
 
-    updated[currentQuestion] = {
-      ...updated[currentQuestion],
-      answer: value,
-    };
+  const handlePrevious = () => {
+    stopListening();
+    previousQuestion();
+  };
 
-    return updated;
-  });
+  const handleNext = () => {
+    stopListening();
+    nextQuestion();
+  };
+
+const handleFinish = () => {
+  void submitInterview();
 };
 
-const handleStopRecording = () => {
-  stopListening();
-
-  setAnswers((prev) => {
-    const updated = [...prev];
-
-    updated[currentQuestion] = {
-      ...updated[currentQuestion],
-      answer: transcript,
-    };
-
-    return updated;
-  });
-};
   return (
     <div className="min-h-screen bg-slate-100 px-6 py-10">
-      <div className="mx-auto max-w-6xl rounded-2xl bg-white p-10 shadow-xl">
+      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-10 shadow-xl">
 
         <div className="mb-10 flex items-center justify-between">
           <InterviewHeader
@@ -185,31 +190,33 @@ const handleStopRecording = () => {
           />
         </div>
 
-        <InterviewProgress
-          currentQuestion={currentQuestion}
-          totalQuestions={questions.length}
-        />
-
-        <QuestionCard
-          currentQuestion={currentQuestion}
-          question={questions[currentQuestion]}
-        />
-
-       <RecordingSection
-  answer={currentAnswer}
-  isListening={isListening}
-  onAnswerChange={handleAnswerChange}
-  onStart={startListening}
-  onStop={handleStopRecording}
+      <InterviewProgress
+  current={currentQuestion + 1}
+  total={questions.length}
 />
 
-        <InterviewNavigation
-          currentQuestion={currentQuestion}
-          totalQuestions={questions.length}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onFinish={handleFinish}
+<div className="mt-4">
+  <QuestionCard
+    question={questions[currentQuestion]}
+  />
+</div>
+
+        <RecordingSection
+          answer={currentAnswer}
+          isListening={isListening}
+          onAnswerChange={handleAnswerChange}
+          onStart={startListening}
+          onStop={handleStopRecording}
         />
+
+      <InterviewNavigation
+  currentQuestion={currentQuestion}
+  totalQuestions={questions.length}
+  onPrevious={handlePrevious}
+  onNext={handleNext}
+  onFinish={handleFinish}
+  isSubmitting={isSubmitting}
+/>
 
       </div>
     </div>

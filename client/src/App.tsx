@@ -10,6 +10,7 @@ import ResultsPage from "./pages/Results/ResultsPage";
 import PublicLayout from "./components/layout/PublicLayout"
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard/DashboardPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -24,17 +25,30 @@ function App() {
 
   {/* Authenticated Pages */}
   <Route element={<AppLayout />}>
-  <Route
+ <Route
     path="/dashboard"
-    element={<Dashboard />}
-  />
+    element={
+        <ProtectedRoute>
+            <Dashboard />
+        </ProtectedRoute>
+    }
+/>
     <Route
       path="/create-interview"
-      element={<CreateInterviewPage />}
+      element={
+        <ProtectedRoute>
+
+      <CreateInterviewPage />
+        </ProtectedRoute>
+    }
     />
     <Route
       path="/results"
-      element={<ResultsPage />}
+      element={
+        <ProtectedRoute>
+
+      <ResultsPage />
+        </ProtectedRoute>}
     />
   </Route>
 

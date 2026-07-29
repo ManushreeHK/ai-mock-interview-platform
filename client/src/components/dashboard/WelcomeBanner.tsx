@@ -46,21 +46,50 @@ export default function WelcomeBanner() {
         </div>
 
         {/* Right */}
-        <div className="hidden lg:flex items-center justify-center">
-          <div className="flex h-72 w-72 items-center justify-center rounded-full bg-white/10 backdrop-blur">
-            <div className="text-center">
-              <div className="text-7xl">🤖</div>
+<div className="hidden lg:flex">
+  <div className="w-80 rounded-3xl bg-white/10 p-6 backdrop-blur-xl border border-white/20">
 
-              <p className="mt-4 text-xl font-semibold">
-                AI Interview Coach
-              </p>
+    <h3 className="text-xl font-semibold">
+      Today's Progress
+    </h3>
 
-              <p className="text-blue-100">
-                Personalized feedback
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="mt-6 space-y-4">
+
+      <div className="flex justify-between">
+        <span>🔥 Interviews</span>
+        <span className="font-bold">12</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>⭐ Average Score</span>
+        <span className="font-bold">84%</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>🏆 Current Streak</span>
+        <span className="font-bold">6 Days</span>
+      </div>
+
+    </div>
+
+    <div className="mt-8">
+      <div className="flex justify-between text-sm">
+        <span>Next Goal</span>
+        <span>60%</span>
+      </div>
+
+      <div className="mt-2 h-2 rounded-full bg-white/20">
+        <div className="h-2 w-3/5 rounded-full bg-white"></div>
+      </div>
+
+      <p className="mt-3 text-sm text-blue-100">
+        Complete 3 interviews today
+      </p>
+
+    </div>
+
+  </div>
+</div>
       </div>
     </section>
   );

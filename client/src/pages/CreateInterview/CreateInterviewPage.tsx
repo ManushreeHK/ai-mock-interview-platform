@@ -5,6 +5,8 @@ import Select from "../../components/ui/Select";
 import FileUpload from "../../components/ui/FileUpload";
 import Button from "../../components/ui/Button";
 import api from "../../services/api";
+import InterviewType from "../../components/InterviewType";
+import { Sparkles } from "lucide-react";
 
 function CreateInterviewPage() {
   const navigate = useNavigate();
@@ -49,6 +51,7 @@ function CreateInterviewPage() {
   ];
 
   const difficulties = ["Easy", "Medium", "Hard"];
+  const [interviewType, setInterviewType] = useState("technical");
 
   const domains = [
     "Web Development",
@@ -168,22 +171,40 @@ function CreateInterviewPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 px-6 py-12">
-      <div className="mx-auto max-w-5xl rounded-2xl bg-white p-10 shadow-xl">
+return (
+  <div className="space-y-8">
 
-        <h1 className="text-4xl font-bold text-gray-900">
-          Create Your AI Interview
-        </h1>
+    {/* Page Header */}
+<div className="mb-8">
+  <div className="flex items-center gap-3">
+    <Sparkles className="h-7 w-7 text-blue-600" />
 
-        <p className="mb-10 mt-3 text-lg text-gray-600">
-          Fill in the details below and let AI generate a personalized mock interview.
-        </p>
+    <h1 className="text-3xl font-bold text-gray-900">
+      Create Your AI Interview
+    </h1>
+  </div>
+</div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+    {/* Interview Type */}
+    <InterviewType
+      value={interviewType}
+      onChange={setInterviewType}
+    />
+
+    {/* Main Layout */}
+    <div className="grid gap-8 xl:grid-cols-3">
+
+      {/* Left Side */}
+      <div className="xl:col-span-2 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+
+        <h2 className="mb-8 text-2xl font-bold text-slate-900">
+          Interview Details
+        </h2>
+
+        <div className="grid gap-6">
 
           <Select
-            label="Role *"
+            label="Role"
             options={roles}
             value={formData.role}
             error={errors.role}
@@ -192,77 +213,207 @@ function CreateInterviewPage() {
             }
           />
 
-          <Select
-            label="Experience *"
-            options={experiences}
-            value={formData.experience}
-            error={errors.experience}
-            onChange={(e) =>
-              handleSelectChange("experience", e.target.value)
-            }
-          />
+          {/* Experience */}
 
-          <Select
-            label="Difficulty *"
-            options={difficulties}
-            value={formData.difficulty}
-            error={errors.difficulty}
-            onChange={(e) =>
-              handleSelectChange("difficulty", e.target.value)
-            }
-          />
+          <div>
+            <label className="mb-3 block font-medium">
+              Experience
+            </label>
 
-          <Select
-            label="Domain *"
-            options={domains}
-            value={formData.domain}
-            error={errors.domain}
-            onChange={(e) =>
-              handleSelectChange("domain", e.target.value)
-            }
-          />
+            <div className="flex flex-wrap gap-3">
+              {experiences.map((exp) => (
+                <button
+                  key={exp}
+                  type="button"
+                  onClick={() =>
+                    handleSelectChange("experience", exp)
+                  }
+                  className={`rounded-xl border px-4 py-2 transition ${
+                    formData.experience === exp
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-slate-300 hover:border-blue-300"
+                  }`}
+                >
+                  {exp}
+                </button>
+              ))}
+            </div>
 
-          <Select
-            label="Programming Language *"
-            options={languages}
-            value={formData.language}
-            error={errors.language}
-            onChange={(e) =>
-              handleSelectChange("language", e.target.value)
-            }
-          />
+            {errors.experience && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.experience}
+              </p>
+            )}
+          </div>
+
+          {/* Difficulty */}
+
+          <div>
+            <label className="mb-3 block font-medium">
+              Difficulty
+            </label>
+
+            <div className="flex gap-3">
+              {difficulties.map((difficulty) => (
+                <button
+                  key={difficulty}
+                  type="button"
+                  onClick={() =>
+                    handleSelectChange(
+                      "difficulty",
+                      difficulty
+                    )
+                  }
+                  className={`rounded-xl border px-4 py-2 transition ${
+                    formData.difficulty === difficulty
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-slate-300 hover:border-blue-300"
+                  }`}
+                >
+                  {difficulty}
+                </button>
+              ))}
+            </div>
+
+            {errors.difficulty && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.difficulty}
+              </p>
+            )}
+          </div>
+
+          {interviewType !== "behavioral" && (
+            <>
+              <Select
+                label="Domain"
+                options={domains}
+                value={formData.domain}
+                error={errors.domain}
+                onChange={(e) =>
+                  handleSelectChange(
+                    "domain",
+                    e.target.value
+                  )
+                }
+              />
+
+              <Select
+                label="Programming Language"
+                options={languages}
+                value={formData.language}
+                error={errors.language}
+                onChange={(e) =>
+                  handleSelectChange(
+                    "language",
+                    e.target.value
+                  )
+                }
+              />
+            </>
+          )}
 
           <Input
-            label="Position *"
-            placeholder="e.g. Senior Frontend Developer"
+            label="Target Position"
+            placeholder="Senior Frontend Developer"
             value={formData.position}
             error={errors.position}
             onChange={(e) =>
-              handleSelectChange("position", e.target.value)
+              handleSelectChange(
+                "position",
+                e.target.value
+              )
             }
           />
 
-          <div className="md:col-span-2">
-            <FileUpload
-              label="Resume *"
-              error={errors.resume}
-              onChange={handleResumeChange}
-            />
-          </div>
+          <FileUpload
+            label="Resume"
+            error={errors.resume}
+            onChange={handleResumeChange}
+          />
 
-          <div className="md:col-span-2 mt-4">
-            <Button
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading
-                ? "Generating Interview..."
-                : "🚀 Generate AI Interview"}
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            fullWidth
+            isLoading={loading}
+            onClick={handleSubmit}
+            className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+          >
+            ✨ Start AI Interview →
+          </Button>
 
         </div>
       </div>
+
+      {/* Right Side */}
+
+      <div className="sticky top-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <h2 className="text-xl font-bold">
+          Interview Summary
+        </h2>
+
+        <div className="mt-6 space-y-4">
+
+          <SummaryRow
+            label="Interview"
+            value={interviewType}
+          />
+
+          <SummaryRow
+            label="Role"
+            value={formData.role || "-"}
+          />
+
+          <SummaryRow
+            label="Experience"
+            value={formData.experience || "-"}
+          />
+
+          <SummaryRow
+            label="Difficulty"
+            value={formData.difficulty || "-"}
+          />
+
+          <SummaryRow
+            label="Language"
+            value={formData.language || "-"}
+          />
+
+        </div>
+
+        <div className="mt-8 rounded-2xl bg-blue-50 p-5">
+
+          <p className="text-sm text-slate-500">
+            Estimated Duration
+          </p>
+
+          <p className="mt-2 text-3xl font-bold text-blue-600">
+            20 mins
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+);
+}
+
+function SummaryRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex justify-between border-b border-slate-100 pb-3">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-semibold capitalize">
+        {value}
+      </span>
     </div>
   );
 }

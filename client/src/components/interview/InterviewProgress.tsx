@@ -1,43 +1,34 @@
 type InterviewProgressProps = {
-  currentQuestion: number;
-  totalQuestions: number;
+  current: number;
+  total: number;
 };
 
-function InterviewProgress({
-  currentQuestion,
-  totalQuestions,
+export default function InterviewProgress({
+  current,
+  total,
 }: InterviewProgressProps) {
-  const progress =
-    ((currentQuestion + 1) / totalQuestions) * 100;
+  const progress = (current / total) * 100;
 
   return (
-    <div className="mb-8">
+    <div className="flex-1">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Question {current} of {total}
+        </h2>
 
-      <div className="flex justify-between mb-2">
-
-        <span className="font-semibold">
-          Progress
+        <span className="text-sm font-medium text-blue-600">
+          {Math.round(progress)}%
         </span>
-
-        <span>
-          {currentQuestion + 1} / {totalQuestions}
-        </span>
-
       </div>
 
-      <div className="h-3 bg-gray-200 rounded-full">
-
+      <div className="h-3 overflow-hidden rounded-full bg-slate-200">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all duration-300"
+          className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
           style={{
             width: `${progress}%`,
           }}
         />
-
       </div>
-
     </div>
   );
 }
-
-export default InterviewProgress;

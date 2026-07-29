@@ -1,25 +1,42 @@
+import { MessageSquare } from "lucide-react";
+
 type QuestionCardProps = {
   question: string;
-  currentQuestion: number;
 };
 
-function QuestionCard({
+export default function QuestionCard({
   question,
-  currentQuestion,
 }: QuestionCardProps) {
   return (
-    <div className="border rounded-xl p-8">
+    <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
 
-      <h2 className="text-2xl font-bold mb-6">
-        Question {currentQuestion + 1}
-      </h2>
+      {/* Header */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="rounded-xl bg-blue-100 p-3">
+          <MessageSquare
+            size={22}
+            className="text-blue-600"
+          />
+        </div>
 
-      <p className="text-xl leading-8">
-        {question}
-      </p>
+        <div>
+          <p className="text-sm text-slate-500">
+            Current Question
+          </p>
+
+          <h2 className="text-xl font-bold text-slate-900">
+            AI Interview Question
+          </h2>
+        </div>
+      </div>
+
+      {/* Question */}
+      <div className="rounded-2xl bg-slate-50 p-6">
+        <p className="text-lg leading-8 text-slate-800">
+          {question}
+        </p>
+      </div>
 
     </div>
   );
 }
-
-export default QuestionCard;

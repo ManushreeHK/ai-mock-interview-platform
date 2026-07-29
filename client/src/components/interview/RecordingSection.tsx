@@ -1,3 +1,6 @@
+import { FileText, Mic, Square } from "lucide-react";
+import Button from "../ui/Button";
+
 type RecordingSectionProps = {
   answer: string;
   isListening: boolean;
@@ -6,7 +9,7 @@ type RecordingSectionProps = {
   onStop: () => void;
 };
 
-function RecordingSection({
+export default function RecordingSection({
   answer,
   isListening,
   onAnswerChange,
@@ -14,44 +17,57 @@ function RecordingSection({
   onStop,
 }: RecordingSectionProps) {
   return (
-    <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-5 text-2xl font-bold">
-        Your Answer
-      </h2>
+    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+            <FileText size={22} />
+          </div>
 
-      <div className="mb-6 flex gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">
+              Your Answer
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              Record your response or edit the transcript manually.
+            </p>
+          </div>
+        </div>
+
         {isListening ? (
-          <button
+          <Button
+            type="button"
+            variant="danger"
+            leftIcon={<Square size={17} />}
             onClick={onStop}
-            className="rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
           >
-            🛑 Stop Recording
-          </button>
+            Stop Recording
+          </Button>
         ) : (
-          <button
+          <Button
+            type="button"
+            leftIcon={<Mic size={18} />}
             onClick={onStart}
-            className="rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700"
           >
-            🎤 Start Recording
-          </button>
+            Start Recording
+          </Button>
         )}
       </div>
 
       <textarea
         value={answer}
-        onChange={(e) => onAnswerChange(e.target.value)}
+        onChange={(event) => onAnswerChange(event.target.value)}
         placeholder="Click Start Recording and begin speaking..."
-        className="min-h-[180px] w-full resize-none rounded-xl border border-gray-300 bg-gray-50 p-5 text-lg leading-8 text-gray-800 outline-none focus:border-blue-500"
+        className="mt-6 min-h-44 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-5 text-base leading-7 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
       />
 
       {isListening && (
-        <div className="mt-4 flex items-center gap-2 font-semibold text-red-600">
-          <span className="h-3 w-3 animate-pulse rounded-full bg-red-600"></span>
+        <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-red-600">
+          <span className="h-3 w-3 animate-pulse rounded-full bg-red-600" />
           Listening...
         </div>
       )}
-    </div>
+    </section>
   );
 }
-
-export default RecordingSection;
