@@ -1,33 +1,13 @@
-import { useEffect, useState } from "react";
-import { fetchUserAttributes } from "aws-amplify/auth";
+import { useAuth } from "../auth/useAuth";
 
 export function useCurrentUser() {
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    picture: "",
-  });
+  const { profile } = useAuth();
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const attributes = await fetchUserAttributes();
+  if (!profile) {
+    throw new Error(
+      "Authenticated profile is unavailable for the current user."
+    );
+  }
 
-        setUser({
-          name:
-            attributes.name ||
-            attributes.given_name ||
-            "Guest User",
-          email: attributes.email || "",
-          picture: attributes.picture || "",
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    loadUser();
-  }, []);
-
-  return user;
+  return profile;
 }

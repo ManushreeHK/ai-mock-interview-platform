@@ -77,17 +77,18 @@ const submitInterview = useCallback(async () => {
     }
 
     const response = await api.post("/interview/evaluate", {
+      type: interviewDetails?.interviewType,
       role: interviewDetails?.role,
       experience: interviewDetails?.experience,
+      difficulty: interviewDetails?.difficulty,
+      language: interviewDetails?.language,
       questions: finalAnswers.map((item) => item.question),
       answers: finalAnswers.map((item) => item.answer),
     });
 
     navigate("/results", {
       state: {
-        interviewDetails,
-        answers: finalAnswers,
-        evaluation: response.data.evaluation,
+        result: response.data.result,
       },
     });
   } catch (error) {

@@ -1,28 +1,22 @@
 import { useState,useEffect } from "react";
-import { login, getSession,currentUser } from "../../services/auth";
+import { login } from "../../services/auth";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton";
+import { useAuth } from "../../auth/useAuth";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { status, refreshAuth } = useAuth();
 
   useEffect(() => {
-  async function checkUser() {
-    try {
-      const user = await currentUser();
-      console.log("Already signed in:", user);
-
-      navigate("/dashboard");
-    } catch {
-      console.log("No authenticated user");
+    if (status === "authenticated") {
+      navigate("/dashboard", { replace: true });
     }
-  }
-
-  checkUser();
-}, [navigate]);
+  }, [navigate, status]);
 async function handleLogin(e: React.FormEvent) {
   e.preventDefault();
   
@@ -31,11 +25,11 @@ async function handleLogin(e: React.FormEvent) {
     await login(email, password);
 
     alert("Login Successful!");
-    const session = await getSession();
+    const authenticated = await refreshAuth();
 
-console.log(session);
-
-    navigate("/dashboard");
+    if (authenticated) {
+      navigate("/dashboard", { replace: true });
+    }
   } catch (err: unknown) {
     console.error(err);
 
@@ -56,6 +50,16 @@ console.log(session);
         <h1 className="mb-6 text-center text-3xl font-bold">
           Login
         </h1>
+
+        <GoogleSignInButton />
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs font-medium text-gray-500">
+            Or continue with email
+          </span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
 
         <input
           className="mb-4 w-full rounded border p-3"

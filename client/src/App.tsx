@@ -11,6 +11,7 @@ import PublicLayout from "./components/layout/PublicLayout"
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import ProtectedAppErrorBoundary from "./components/routes/ProtectedAppErrorBoundary";
 
 function App() {
   return (
@@ -24,7 +25,13 @@ function App() {
   </Route>
 
   {/* Authenticated Pages */}
-  <Route element={<AppLayout />}>
+  <Route
+    element={
+      <ProtectedAppErrorBoundary>
+        <AppLayout />
+      </ProtectedAppErrorBoundary>
+    }
+  >
  <Route
     path="/dashboard"
     element={

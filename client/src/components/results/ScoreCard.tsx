@@ -1,36 +1,44 @@
-import type { IconType } from "react-icons";
+import type { LucideIcon } from "lucide-react";
 
-interface ScoreCardProps {
-  title: string;
+type ScoreCardProps = {
+  label: string;
   score: number;
-  color: string;
-  icon: IconType;
-}
+  icon: LucideIcon;
+  tone: "blue" | "emerald" | "amber" | "violet";
+};
 
-function ScoreCard({
-  title,
+const tones = {
+  blue: "bg-blue-50 text-blue-600",
+  emerald: "bg-emerald-50 text-emerald-600",
+  amber: "bg-amber-50 text-amber-600",
+  violet: "bg-violet-50 text-violet-600",
+};
+
+export default function ScoreCard({
+  label,
   score,
-  color,
   icon: Icon,
+  tone,
 }: ScoreCardProps) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-
-      <div className={`text-5xl ${color}`}>
-        <Icon />
+    <article className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}
+      >
+        <Icon size={21} />
       </div>
 
-      <h3 className="mt-5 text-lg font-semibold text-gray-700">
-        {title}
-      </h3>
-
-      <p className={`mt-4 text-5xl font-bold ${color}`}>
-        {score}
-        <span className="text-2xl">/10</span>
-      </p>
-
-    </div>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-slate-500">
+          {label}
+        </p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">
+          {score}
+          <span className="ml-1 text-sm font-medium text-slate-400">
+            /10
+          </span>
+        </p>
+      </div>
+    </article>
   );
 }
-
-export default ScoreCard;

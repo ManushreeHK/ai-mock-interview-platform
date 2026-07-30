@@ -3,6 +3,10 @@ import "dotenv/config";
 type ServerEnv = {
   port: number;
   geminiApiKey: string;
+  cognitoUserPoolId: string;
+  cognitoUserPoolClientId: string;
+  awsRegion: string;
+  interviewsTableName: string;
 };
 
 function requireEnv(name: string): string {
@@ -29,4 +33,12 @@ function readPort(): number {
 export const env: ServerEnv = Object.freeze({
   port: readPort(),
   geminiApiKey: requireEnv("GEMINI_API_KEY"),
+  cognitoUserPoolId: requireEnv("COGNITO_USER_POOL_ID"),
+  cognitoUserPoolClientId: requireEnv(
+    "COGNITO_USER_POOL_CLIENT_ID"
+  ),
+  awsRegion: requireEnv("AWS_REGION"),
+  interviewsTableName: requireEnv(
+    "DYNAMODB_INTERVIEWS_TABLE"
+  ),
 });

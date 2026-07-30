@@ -2,6 +2,9 @@ type ClientEnv = {
   apiBaseUrl: string;
   cognitoUserPoolId: string;
   cognitoUserPoolClientId: string;
+  cognitoDomain: string;
+  oauthRedirectSignIn: string;
+  oauthRedirectSignOut: string;
 };
 
 function requireEnv(name: keyof ImportMetaEnv): string {
@@ -19,5 +22,12 @@ export const env: ClientEnv = Object.freeze({
   cognitoUserPoolId: requireEnv("VITE_COGNITO_USER_POOL_ID"),
   cognitoUserPoolClientId: requireEnv(
     "VITE_COGNITO_USER_POOL_CLIENT_ID"
+  ),
+  cognitoDomain: requireEnv("VITE_COGNITO_DOMAIN"),
+  oauthRedirectSignIn: requireEnv(
+    "VITE_OAUTH_REDIRECT_SIGN_IN"
+  ),
+  oauthRedirectSignOut: requireEnv(
+    "VITE_OAUTH_REDIRECT_SIGN_OUT"
   ),
 });

@@ -1,36 +1,36 @@
-interface Props {
+type PerformanceBadgeProps = {
   score: number;
-}
+};
 
-function PerformanceBadge({ score }: Props) {
-  const { badge, color } =
+export default function PerformanceBadge({
+  score,
+}: PerformanceBadgeProps) {
+  const { label, color } =
     score >= 9
       ? {
-          badge: "🏆 Excellent",
-          color: "bg-green-100 text-green-700",
+          label: "Excellent",
+          color: "bg-emerald-100 text-emerald-700",
         }
       : score >= 7
-      ? {
-          badge: "🚀 Very Good",
-          color: "bg-blue-100 text-blue-700",
-        }
-      : score >= 5
-      ? {
-          badge: "👍 Good",
-          color: "bg-yellow-100 text-yellow-700",
-        }
-      : {
-          badge: "📚 Beginner",
-          color: "bg-red-100 text-red-700",
-        };
+        ? {
+            label: "Very good",
+            color: "bg-blue-100 text-blue-700",
+          }
+        : score >= 5
+          ? {
+              label: "Good",
+              color: "bg-amber-100 text-amber-700",
+            }
+          : {
+              label: "Keep practicing",
+              color: "bg-rose-100 text-rose-700",
+            };
 
   return (
-    <div
-      className={`inline-flex rounded-full px-5 py-2 font-semibold ${color}`}
+    <span
+      className={`inline-flex w-fit shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ${color}`}
     >
-      {badge}
-    </div>
+      {label}
+    </span>
   );
 }
-
-export default PerformanceBadge;

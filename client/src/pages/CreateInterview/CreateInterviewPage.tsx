@@ -161,7 +161,10 @@ function CreateInterviewPage() {
       navigate("/interview", {
         state: {
           questions: response.data.questions,
-          interviewDetails: formData,
+          interviewDetails: {
+            ...formData,
+            interviewType,
+          },
         },
       });
 

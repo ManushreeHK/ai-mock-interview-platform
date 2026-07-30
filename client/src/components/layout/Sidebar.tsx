@@ -3,9 +3,11 @@ import { navigation } from "../../constants/navigation";
 import SidebarItem from "./SidebarItem";
 import { logout } from "../../services/auth";
 import { useNavigate } from "react-router-dom";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 export default function Sidebar() {
     const navigate = useNavigate();
+    const user = useCurrentUser();
     async function handleLogout() {
   try {
     await logout();
@@ -45,11 +47,11 @@ export default function Sidebar() {
       <div className="border-t border-slate-200 p-4">
         <div className="mb-4">
           <p className="font-semibold text-slate-900">
-            Guest User
+            {user.displayName}
           </p>
 
           <p className="text-sm text-slate-500">
-            guest@example.com
+            {user.email}
           </p>
         </div>
 

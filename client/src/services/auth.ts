@@ -4,8 +4,7 @@ import {
   signOut,
   getCurrentUser,
   fetchAuthSession,
-  confirmSignUp,
-  fetchUserAttributes
+  confirmSignUp
 } from "aws-amplify/auth";
 
 
@@ -49,7 +48,4 @@ export async function currentUser() {
 
 export async function getSession() {
   return await fetchAuthSession();
-}
-export async function getUserAttributes() {
-  return await fetchUserAttributes();
 }

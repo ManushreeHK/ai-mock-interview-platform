@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import {
   generateInterviewQuestions,
-  evaluateInterviewAnswers,
 } from "../services/gemini.service.js";
+import { evaluateAndSaveInterview } from "../services/interview.service.js";
 
 export const generateInterview = async (
   req: Request,
@@ -53,22 +53,29 @@ export const evaluateInterview = async (
 ) => {
   try {
     const {
+      type,
       role,
       experience,
+      difficulty,
+      language,
       questions,
       answers,
     } = req.body;
 
-    const result = await evaluateInterviewAnswers({
+    const result = await evaluateAndSaveInterview({
+      userId: req.authenticatedUser!.sub,
+      type,
       role,
       experience,
+      difficulty,
+      language,
       questions,
       answers,
     });
 
     res.status(200).json({
       success: true,
-      evaluation: result,
+      result,
     });
   } catch (error) {
     console.error(error);

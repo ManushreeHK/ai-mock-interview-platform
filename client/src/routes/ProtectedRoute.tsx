@@ -1,43 +1,29 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { getSession } from "../services/auth";
+import type { ReactNode } from "react";
+import { useAuth } from "../auth/useAuth";
 
 type Props = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export default function ProtectedRoute({ children }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { status } = useAuth();
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const session = await getSession();
-
-        if (session.tokens?.accessToken) {
-          setAuthenticated(true);
-        }
-      } catch {
-        setAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    checkAuth();
-  }, []);
-
-  if (loading) {
+  if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center">
-        Checking authentication...
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+          <p className="mt-4 font-medium text-slate-600">
+            Checking authentication...
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!authenticated) {
-    return <Navigate to="/" replace />;
+  if (status === "unauthenticated") {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

@@ -1,10 +1,10 @@
-export interface QuestionEvaluation {
+export type QuestionEvaluation = {
   question: string;
   score: number;
   feedback: string;
-}
+};
 
-export interface Evaluation {
+export type InterviewEvaluation = {
   overallScore: number;
   communication: number;
   technicalKnowledge: number;
@@ -12,9 +12,9 @@ export interface Evaluation {
   strengths: string[];
   weaknesses: string[];
   questionEvaluation: QuestionEvaluation[];
-}
+};
 
-export interface SavedInterviewResult {
+export type InterviewResult = {
   userId: string;
   interviewId: string;
   type: string;
@@ -24,7 +24,12 @@ export interface SavedInterviewResult {
   language: string;
   questions: string[];
   answers: string[];
-  evaluation: Evaluation;
+  evaluation: InterviewEvaluation;
   status: "completed";
   createdAt: string;
-}
+};
+
+export type CreateInterviewResult = Omit<
+  InterviewResult,
+  "interviewId" | "status" | "createdAt"
+>;

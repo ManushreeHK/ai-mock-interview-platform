@@ -1,7 +1,10 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "../ui";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 export default function WelcomeBanner() {
+  const user = useCurrentUser();
+
   return (
     <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-10 text-white shadow-xl">
       {/* Background Glow */}
@@ -17,7 +20,7 @@ export default function WelcomeBanner() {
           </div>
 
           <h1 className="text-5xl font-bold leading-tight">
-            Welcome back 👋
+            Welcome back, {user.displayName} 👋
           </h1>
 
           <p className="mt-4 text-lg text-blue-100">
