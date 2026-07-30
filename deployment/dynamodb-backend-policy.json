@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WriteInterviewResults",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:<AWS_REGION>:<AWS_ACCOUNT_ID>:table/<DYNAMODB_INTERVIEWS_TABLE>"
+      ]
+    }
+  ]
+}

@@ -1,12 +1,14 @@
 import "dotenv/config";
 
 type ServerEnv = {
+  nodeEnv: "development" | "test" | "production";
   port: number;
   geminiApiKey: string;
   cognitoUserPoolId: string;
   cognitoUserPoolClientId: string;
   awsRegion: string;
   interviewsTableName: string;
+  frontendOrigins: readonly string[];
 };
 
 function requireEnv(name: string): string {
@@ -30,7 +32,76 @@ function readPort(): number {
   return port;
 }
 
+function readNodeEnv(): ServerEnv["nodeEnv"] {
+  const value = process.env.NODE_ENV?.trim() || "development";
+
+  if (
+    value !== "development" &&
+    value !== "test" &&
+    value !== "production"
+  ) {
+    throw new Error(
+      "NODE_ENV must be development, test, or production."
+    );
+  }
+
+  return value;
+}
+
+function normalizeOrigin(value: string): string {
+  let url: URL;
+
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(
+      "FRONTEND_URLS must contain valid absolute URLs."
+    );
+  }
+
+  if (
+    (url.protocol !== "http:" && url.protocol !== "https:") ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(
+      "FRONTEND_URLS entries must be HTTP(S) origins without paths."
+    );
+  }
+
+  return url.origin;
+}
+
+function readFrontendOrigins(
+  nodeEnv: ServerEnv["nodeEnv"]
+): readonly string[] {
+  const configuredOrigins = (process.env.FRONTEND_URLS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map(normalizeOrigin);
+  const origins =
+    nodeEnv === "development"
+      ? ["http://localhost:5173", ...configuredOrigins]
+      : configuredOrigins;
+  const uniqueOrigins = [...new Set(origins)];
+
+  if (nodeEnv === "production" && uniqueOrigins.length === 0) {
+    throw new Error(
+      "Missing required environment variable: FRONTEND_URLS"
+    );
+  }
+
+  return Object.freeze(uniqueOrigins);
+}
+
+const nodeEnv = readNodeEnv();
+
 export const env: ServerEnv = Object.freeze({
+  nodeEnv,
   port: readPort(),
   geminiApiKey: requireEnv("GEMINI_API_KEY"),
   cognitoUserPoolId: requireEnv("COGNITO_USER_POOL_ID"),
@@ -41,4 +112,5 @@ export const env: ServerEnv = Object.freeze({
   interviewsTableName: requireEnv(
     "DYNAMODB_INTERVIEWS_TABLE"
   ),
+  frontendOrigins: readFrontendOrigins(nodeEnv),
 });

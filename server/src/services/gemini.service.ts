@@ -1,8 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
+import { env } from "../config/env.js";
 
 export async function generateInterviewQuestions(prompt: string) {
   const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY!,
+    apiKey: env.geminiApiKey,
   });
 
  const MAX_RETRIES = 3;
@@ -48,7 +49,7 @@ export async function evaluateInterviewAnswers(data: {
   answers: string[];
 }) {
   const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
+  apiKey: env.geminiApiKey,
 });
   const prompt = `
 You are an expert technical interviewer.

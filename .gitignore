@@ -7,9 +7,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
 *.local
 
 # Editor directories and files
@@ -26,3 +29,15 @@ dist-ssr
 # Environment files
 .env
 **/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Local credentials and private keys
+.aws/
+**/.aws/
+credentials
+**/credentials
+*.pem
+*.key

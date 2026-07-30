@@ -11,8 +11,8 @@ Amplify.configure({
         oauth: {
           domain: env.cognitoDomain,
           scopes: ["openid", "email", "profile"],
-          redirectSignIn: [env.oauthRedirectSignIn],
-          redirectSignOut: [env.oauthRedirectSignOut],
+          redirectSignIn: [...env.oauthRedirectSignIn],
+          redirectSignOut: [...env.oauthRedirectSignOut],
           responseType: "code",
         },
       },
