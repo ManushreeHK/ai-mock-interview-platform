@@ -1,10 +1,11 @@
 import { Amplify } from "aws-amplify";
+import { env } from "./config/env";
 
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: "ap-south-1_BZAwQA8lI",
-      userPoolClientId: "3mc28s01d84a8n38di06vlb9lh",
+      userPoolId: env.cognitoUserPoolId,
+      userPoolClientId: env.cognitoUserPoolClientId,
       loginWith: {
         email: true,
       },

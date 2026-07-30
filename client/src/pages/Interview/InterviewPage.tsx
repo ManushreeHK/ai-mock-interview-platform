@@ -16,11 +16,22 @@ import { useTimer } from "../../hooks/useTimer";
 
 import api from "../../services/api";
 
+function appendRecognizedSpeech(answer: string, transcript: string) {
+  const recognizedSpeech = transcript.trim();
+
+  if (!recognizedSpeech) return answer;
+
+  return answer.trim()
+    ? `${answer.trimEnd()} ${recognizedSpeech}`
+    : recognizedSpeech;
+}
+
 function InterviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
 const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recordingBaseAnswer, setRecordingBaseAnswer] = useState("");
   const questions: string[] = location.state?.questions || [];
   const interviewDetails = location.state?.interviewDetails;
 
@@ -55,12 +66,15 @@ const submitInterview = useCallback(async () => {
   try {
     const finalAnswers = [...answers];
 
-    finalAnswers[currentQuestion] = {
-      ...finalAnswers[currentQuestion],
-      answer:
-        transcript.trim() ||
-        finalAnswers[currentQuestion].answer,
-    };
+    if (isListening) {
+      finalAnswers[currentQuestion] = {
+        ...finalAnswers[currentQuestion],
+        answer: appendRecognizedSpeech(
+          recordingBaseAnswer,
+          transcript
+        ),
+      };
+    }
 
     const response = await api.post("/interview/evaluate", {
       role: interviewDetails?.role,
@@ -86,7 +100,9 @@ const submitInterview = useCallback(async () => {
   currentQuestion,
   transcript,
   interviewDetails,
-  isSubmitting,
+    isSubmitting,
+    isListening,
+    recordingBaseAnswer,
   navigate,
   stopListening,
 ]);
@@ -96,7 +112,7 @@ const handleTimeUp = useCallback(() => {
 }, [submitInterview]);
 
   const { minutes, seconds } = useTimer({
-    duration: 12,
+    duration: 1200,
     resetKey: 0,
     onTimeUp: handleTimeUp,
   });
@@ -128,10 +144,9 @@ const handleTimeUp = useCallback(() => {
     );
   }
 
-  const currentAnswer =
-    isListening
-      ? transcript
-      : answers[currentQuestion].answer;
+  const currentAnswer = isListening
+    ? appendRecognizedSpeech(recordingBaseAnswer, transcript)
+    : answers[currentQuestion].answer;
 
   const handleAnswerChange = (value: string) => {
     setAnswers((prev) => {
@@ -146,6 +161,11 @@ const handleTimeUp = useCallback(() => {
     });
   };
 
+  const handleStartRecording = () => {
+    setRecordingBaseAnswer(answers[currentQuestion].answer);
+    startListening();
+  };
+
   const handleStopRecording = () => {
     stopListening();
 
@@ -154,11 +174,16 @@ const handleTimeUp = useCallback(() => {
 
       updated[currentQuestion] = {
         ...updated[currentQuestion],
-        answer: transcript,
+        answer: appendRecognizedSpeech(
+          recordingBaseAnswer,
+          transcript
+        ),
       };
 
       return updated;
     });
+
+    clearTranscript();
   };
 
   const handlePrevious = () => {
@@ -205,7 +230,7 @@ const handleFinish = () => {
           answer={currentAnswer}
           isListening={isListening}
           onAnswerChange={handleAnswerChange}
-          onStart={startListening}
+          onStart={handleStartRecording}
           onStop={handleStopRecording}
         />
 

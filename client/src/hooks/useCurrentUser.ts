@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
+import { fetchUserAttributes } from "aws-amplify/auth";
 
 export function useCurrentUser() {
   const [user, setUser] = useState({

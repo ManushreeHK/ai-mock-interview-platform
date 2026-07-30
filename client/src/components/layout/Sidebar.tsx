@@ -1,5 +1,5 @@
 import { LogOut } from "lucide-react";
-import { navigation } from "../../constants/Navigation";
+import { navigation } from "../../constants/navigation";
 import SidebarItem from "./SidebarItem";
 import { logout } from "../../services/auth";
 import { useNavigate } from "react-router-dom";

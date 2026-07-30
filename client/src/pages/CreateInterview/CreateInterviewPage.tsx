@@ -122,11 +122,13 @@ function CreateInterviewPage() {
     if (!formData.difficulty)
       newErrors.difficulty = "Please select difficulty.";
 
-    if (!formData.domain)
-      newErrors.domain = "Please select domain.";
+    if (interviewType !== "behavioral") {
+      if (!formData.domain)
+        newErrors.domain = "Please select domain.";
 
-    if (!formData.language)
-      newErrors.language = "Please select programming language.";
+      if (!formData.language)
+        newErrors.language = "Please select programming language.";
+    }
 
     if (!formData.position.trim())
       newErrors.position = "Position is required.";

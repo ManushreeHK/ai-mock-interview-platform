@@ -7,27 +7,6 @@ import QuickActions from "../../components/dashboard/QuickActions";
 import Achievements from "../../components/dashboard/Achievements";
 
 function Dashboard() {
-  const recentInterviews = [
-    {
-      id: 1,
-      role: "React Developer",
-      score: 92,
-      date: "Jul 26, 2026",
-    },
-    {
-      id: 2,
-      role: "Frontend Developer",
-      score: 85,
-      date: "Jul 24, 2026",
-    },
-    {
-      id: 3,
-      role: "Node.js Developer",
-      score: 78,
-      date: "Jul 20, 2026",
-    },
-  ];
-
   return (
     <div className="space-y-8">
       <WelcomeBanner />
@@ -50,7 +29,7 @@ function Dashboard() {
         <Achievements />
       </div>
 
-      <RecentInterviews interviews={recentInterviews} />
+      <RecentInterviews />
     </div>
   );
 }

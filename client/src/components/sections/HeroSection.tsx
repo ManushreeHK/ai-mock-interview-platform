@@ -1,7 +1,5 @@
-import { useNavigate } from "react-router-dom"; 
 import Button from "../ui/Button";
 function HeroSection() {
-const navigate = useNavigate();
   return (
     <section className="bg-gray-50">
       <div className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-between px-6 py-16">
