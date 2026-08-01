@@ -4,6 +4,8 @@ type ServerEnv = {
   nodeEnv: "development" | "test" | "production";
   port: number;
   geminiApiKey: string;
+  geminiPrimaryModel: string;
+  geminiFallbackModel: string;
   cognitoUserPoolId: string;
   cognitoUserPoolClientId: string;
   awsRegion: string;
@@ -19,6 +21,10 @@ function requireEnv(name: string): string {
   }
 
   return value.trim();
+}
+
+function optionalEnv(name: string, fallback: string): string {
+  return process.env[name]?.trim() || fallback;
 }
 
 function readPort(): number {
@@ -104,6 +110,14 @@ export const env: ServerEnv = Object.freeze({
   nodeEnv,
   port: readPort(),
   geminiApiKey: requireEnv("GEMINI_API_KEY"),
+  geminiPrimaryModel: optionalEnv(
+    "GEMINI_PRIMARY_MODEL",
+    "gemini-3.5-flash"
+  ),
+  geminiFallbackModel: optionalEnv(
+    "GEMINI_FALLBACK_MODEL",
+    "gemini-3.5-flash-lite"
+  ),
   cognitoUserPoolId: requireEnv("COGNITO_USER_POOL_ID"),
   cognitoUserPoolClientId: requireEnv(
     "COGNITO_USER_POOL_CLIENT_ID"

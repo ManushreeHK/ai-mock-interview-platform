@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
@@ -7,6 +7,7 @@ import Button from "../../components/ui/Button";
 import api from "../../services/api";
 import InterviewType from "../../components/InterviewType";
 import { Sparkles } from "lucide-react";
+import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 
 function CreateInterviewPage() {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ function CreateInterviewPage() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [generationError, setGenerationError] = useState("");
+  const generationInFlight = useRef(false);
 
   const roles = [
     "Frontend Developer",
@@ -103,6 +106,8 @@ function CreateInterviewPage() {
   };
 
   const handleSubmit = async () => {
+    if (generationInFlight.current) return;
+
     const newErrors = {
       role: "",
       experience: "",
@@ -145,7 +150,9 @@ function CreateInterviewPage() {
     if (hasErrors) return;
 
     try {
+      generationInFlight.current = true;
       setLoading(true);
+      setGenerationError("");
 
       const response = await api.post("/interview/generate", {
         role: formData.role,
@@ -155,8 +162,6 @@ function CreateInterviewPage() {
         language: formData.language,
         position: formData.position,
       });
-
-      console.log("Response:", response.data);
 
       navigate("/interview", {
         state: {
@@ -169,9 +174,14 @@ function CreateInterviewPage() {
       });
 
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong!");
+      setGenerationError(
+        getApiErrorMessage(
+          error,
+          "Unable to generate the interview. Please try again."
+        )
+      );
     } finally {
+      generationInFlight.current = false;
       setLoading(false);
     }
   };
@@ -345,6 +355,15 @@ return (
           >
             ✨ Start AI Interview →
           </Button>
+
+          {generationError && (
+            <p
+              role="alert"
+              className="text-center text-sm font-medium text-red-600"
+            >
+              {generationError}
+            </p>
+          )}
 
         </div>
       </div>

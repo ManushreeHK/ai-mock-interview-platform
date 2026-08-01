@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import type { InterviewAnswer } from "../../types/interview";
@@ -15,6 +15,7 @@ import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { useTimer } from "../../hooks/useTimer";
 
 import api from "../../services/api";
+import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 
 function appendRecognizedSpeech(answer: string, transcript: string) {
   const recognizedSpeech = transcript.trim();
@@ -31,6 +32,8 @@ function InterviewPage() {
   const navigate = useNavigate();
 
 const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const submissionInFlight = useRef(false);
   const [recordingBaseAnswer, setRecordingBaseAnswer] = useState("");
   const questions: string[] = location.state?.questions || [];
   const interviewDetails = location.state?.interviewDetails;
@@ -58,9 +61,11 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 const submitInterview = useCallback(async () => {
-  if (isSubmitting) return;
+  if (submissionInFlight.current) return;
 
+  submissionInFlight.current = true;
   setIsSubmitting(true);
+  setSubmissionError("");
   stopListening();
 
   try {
@@ -75,6 +80,8 @@ const submitInterview = useCallback(async () => {
         ),
       };
     }
+
+    setAnswers(finalAnswers);
 
     const response = await api.post("/interview/evaluate", {
       type: interviewDetails?.interviewType,
@@ -92,8 +99,13 @@ const submitInterview = useCallback(async () => {
       },
     });
   } catch (error) {
-    console.error("Interview submission failed:", error);
-    alert("Unable to evaluate the interview. Please try again.");
+    setSubmissionError(
+      getApiErrorMessage(
+        error,
+        "Unable to evaluate the interview. Your answers are saved here—please try again."
+      )
+    );
+    submissionInFlight.current = false;
     setIsSubmitting(false);
   }
 }, [
@@ -101,7 +113,6 @@ const submitInterview = useCallback(async () => {
   currentQuestion,
   transcript,
   interviewDetails,
-    isSubmitting,
     isListening,
     recordingBaseAnswer,
   navigate,
@@ -243,6 +254,15 @@ const handleFinish = () => {
   onFinish={handleFinish}
   isSubmitting={isSubmitting}
 />
+
+      {submissionError && (
+        <p
+          role="alert"
+          className="mt-4 text-center text-sm font-medium text-red-600"
+        >
+          {submissionError}
+        </p>
+      )}
 
       </div>
     </div>

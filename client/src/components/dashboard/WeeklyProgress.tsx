@@ -7,18 +7,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import type { WeeklyScore } from "../../utils/dashboardMetrics";
 
-const data = [
-  { day: "Mon", score: 62 },
-  { day: "Tue", score: 70 },
-  { day: "Wed", score: 74 },
-  { day: "Thu", score: 80 },
-  { day: "Fri", score: 84 },
-  { day: "Sat", score: 88 },
-  { day: "Sun", score: 92 },
-];
-
-export default function WeeklyProgress() {
+export default function WeeklyProgress({ data }: { data: WeeklyScore[] }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-6">
@@ -38,7 +29,7 @@ export default function WeeklyProgress() {
 
             <XAxis dataKey="day" />
 
-            <YAxis domain={[50, 100]} />
+            <YAxis domain={[0, 10]} />
 
             <Tooltip />
 
@@ -47,6 +38,7 @@ export default function WeeklyProgress() {
               dataKey="score"
               stroke="#2563eb"
               strokeWidth={4}
+              connectNulls={false}
             />
           </LineChart>
         </ResponsiveContainer>

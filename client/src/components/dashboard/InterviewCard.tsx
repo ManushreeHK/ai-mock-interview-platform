@@ -1,23 +1,22 @@
 import {
   ArrowRight,
   Calendar,
-  Clock,
+  Gauge,
   Code2,
   MessageSquare,
   Mic,
 } from "lucide-react";
 import clsx from "clsx";
 
-type InterviewType = "Technical" | "Behavioral" | "Coding";
 type InterviewStatus = "Excellent" | "Good" | "Fair";
 
 type InterviewCardProps = {
   role: string;
-  type: InterviewType;
+  type: string;
   score: number;
   status: InterviewStatus;
   date: string;
-  duration: string;
+  difficulty: string;
 };
 
 export default function InterviewCard({
@@ -26,12 +25,13 @@ export default function InterviewCard({
   score,
   status,
   date,
-  duration,
+  difficulty,
 }: InterviewCardProps) {
+  const normalizedType = type.toLowerCase();
   const Icon =
-    type === "Technical"
+    normalizedType === "technical"
       ? Mic
-      : type === "Behavioral"
+      : normalizedType === "behavioral"
       ? MessageSquare
       : Code2;
 
@@ -59,8 +59,8 @@ export default function InterviewCard({
               </div>
 
               <div className="flex items-center gap-1">
-                <Clock size={15} />
-                {duration}
+                <Gauge size={15} />
+                {difficulty}
               </div>
             </div>
           </div>
@@ -68,7 +68,7 @@ export default function InterviewCard({
 
         <div className="text-right">
           <p className="text-3xl font-bold text-slate-900">
-            {score}%
+            {score.toFixed(1)}/10
           </p>
 
           <span

@@ -29,12 +29,8 @@ export default function StatCard({
           </h2>
 
           <div className="mt-3 flex items-center gap-2">
-            <TrendingUp
-              size={14}
-              className="text-emerald-500"
-            />
-
-            <span className="text-sm font-medium text-emerald-600">
+            <TrendingUp size={14} className="text-emerald-500" />
+            <span className="text-sm font-medium text-slate-500">
               {subtitle}
             </span>
           </div>

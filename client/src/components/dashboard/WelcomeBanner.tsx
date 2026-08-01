@@ -1,9 +1,16 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "../ui";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useNavigate } from "react-router-dom";
+import type { DashboardMetrics } from "../../utils/dashboardMetrics";
 
-export default function WelcomeBanner() {
+export default function WelcomeBanner({
+  metrics,
+}: {
+  metrics?: DashboardMetrics;
+}) {
   const user = useCurrentUser();
+  const navigate = useNavigate();
 
   return (
     <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-10 text-white shadow-xl">
@@ -33,6 +40,7 @@ export default function WelcomeBanner() {
            <Button
   variant="hero"
   size="lg"
+  onClick={() => navigate("/create-interview")}
 >
   Start AI Interview
 </Button>
@@ -53,40 +61,49 @@ export default function WelcomeBanner() {
   <div className="w-80 rounded-3xl bg-white/10 p-6 backdrop-blur-xl border border-white/20">
 
     <h3 className="text-xl font-semibold">
-      Today's Progress
+      Your Progress
     </h3>
 
     <div className="mt-6 space-y-4">
 
       <div className="flex justify-between">
         <span>🔥 Interviews</span>
-        <span className="font-bold">12</span>
+        <span className="font-bold">{metrics?.totalInterviews ?? "—"}</span>
       </div>
 
       <div className="flex justify-between">
         <span>⭐ Average Score</span>
-        <span className="font-bold">84%</span>
+        <span className="font-bold">
+          {metrics ? `${metrics.averageScore.toFixed(1)}/10` : "—"}
+        </span>
       </div>
 
       <div className="flex justify-between">
         <span>🏆 Current Streak</span>
-        <span className="font-bold">6 Days</span>
+        <span className="font-bold">
+          {metrics ? `${metrics.currentStreak} Days` : "—"}
+        </span>
       </div>
 
     </div>
 
     <div className="mt-8">
       <div className="flex justify-between text-sm">
-        <span>Next Goal</span>
-        <span>60%</span>
+        <span>Best Score</span>
+        <span>{metrics ? `${metrics.bestScore.toFixed(1)}/10` : "—"}</span>
       </div>
 
       <div className="mt-2 h-2 rounded-full bg-white/20">
-        <div className="h-2 w-3/5 rounded-full bg-white"></div>
+        <div
+          className="h-2 rounded-full bg-white"
+          style={{ width: `${(metrics?.bestScore ?? 0) * 10}%` }}
+        ></div>
       </div>
 
       <p className="mt-3 text-sm text-blue-100">
-        Complete 3 interviews today
+        {metrics
+          ? `${metrics.interviewsThisWeek} completed in the last 7 days`
+          : "Loading your interview history"}
       </p>
 
     </div>

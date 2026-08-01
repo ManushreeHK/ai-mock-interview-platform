@@ -1,45 +1,12 @@
-import { GoogleGenAI } from "@google/genai";
-import { env } from "../config/env.js";
+import { generateWithFallback } from "./gemini-reliability.js";
 
 export async function generateInterviewQuestions(prompt: string) {
-  const ai = new GoogleGenAI({
-    apiKey: env.geminiApiKey,
-  });
+  const { text } = await generateWithFallback(prompt);
 
- const MAX_RETRIES = 3;
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-      });
-
-      const text = response.text ?? "";
-
-      return text
-        .split("\n")
-        .map((line) => line.replace(/^\d+\.\s*/, "").trim())
-        .filter(Boolean);
-    } catch (error: any) {
-      const status = error?.status;
-
-      // Don't retry quota errors
-      if (status === 429) {
-        throw new Error("Gemini API quota exceeded.");
-      }
-
-      // Retry temporary overloads
-      if (status === 503 && attempt < MAX_RETRIES) {
-        const delay = 1000 * Math.pow(2, attempt - 1); // 1s, 2s, 4s
-        console.log(`Gemini busy. Retrying in ${delay}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        continue;
-      }
-
-      throw error;
-    }
-  }
+  return text
+    .split("\n")
+    .map((line) => line.replace(/^\d+\.\s*/, "").trim())
+    .filter(Boolean);
 }
 
 export async function evaluateInterviewAnswers(data: {
@@ -48,9 +15,6 @@ export async function evaluateInterviewAnswers(data: {
   questions: string[];
   answers: string[];
 }) {
-  const ai = new GoogleGenAI({
-  apiKey: env.geminiApiKey,
-});
   const prompt = `
 You are an expert technical interviewer.
 
@@ -74,6 +38,10 @@ ${data.answers[index] || "No answer provided"}
 
 Return ONLY valid JSON in this format:
 
+Every score must be a number between 0 and 10 inclusive.
+Never return percentages or scores out of 20 or 100.
+Decimals are allowed. The overall score must also be between 0 and 10.
+
 {
   "overallScore": number,
   "communication": number,
@@ -91,10 +59,5 @@ Return ONLY valid JSON in this format:
 }
 `;
 
- const response = await ai.models.generateContent({
- model: "gemini-3.5-flash",
-  contents: prompt,
-});
-
-  return response.text;
+  return generateWithFallback(prompt);
 }
