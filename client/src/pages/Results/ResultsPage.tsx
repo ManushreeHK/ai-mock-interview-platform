@@ -1,20 +1,131 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import FeedbackSummary from "../../components/results/FeedbackSummary";
 import QuestionFeedbackList from "../../components/results/QuestionFeedbackList";
 import ResultsActions from "../../components/results/ResultsActions";
 import ResultsHero from "../../components/results/ResultsHero";
 import ScoreOverview from "../../components/results/ScoreOverview";
+import { fetchInterviewHistoryDetail } from "../../services/interviewHistory";
 import type { SavedInterviewResult } from "../../types/evaluation";
 
 type ResultsLocationState = {
   result?: SavedInterviewResult;
 };
 
+type HistoricalLoadState =
+  | { status: "idle" | "loading"; result: null; message: "" }
+  | { status: "success"; result: SavedInterviewResult; message: "" }
+  | { status: "not-found" | "error"; result: null; message: string };
+
 function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { result } =
-    (location.state as ResultsLocationState | null) ?? {};
+  const { interviewId } = useParams<{ interviewId: string }>();
+  const freshResult =
+    ((location.state as ResultsLocationState | null) ?? {}).result ?? null;
+  const [retryKey, setRetryKey] = useState(0);
+  const [historical, setHistorical] = useState<HistoricalLoadState>({
+    status: interviewId ? "loading" : "idle",
+    result: null,
+    message: "",
+  });
+
+  function retryHistoricalResult() {
+    setHistorical({ status: "loading", result: null, message: "" });
+    setRetryKey((value) => value + 1);
+  }
+
+  useEffect(() => {
+    if (!interviewId) return;
+    let active = true;
+
+    fetchInterviewHistoryDetail(interviewId)
+      .then((result) => {
+        if (active) {
+          setHistorical({ status: "success", result, message: "" });
+        }
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          setHistorical({
+            status: "not-found",
+            result: null,
+            message: "This interview result could not be found.",
+          });
+          return;
+        }
+
+        setHistorical({
+          status: "error",
+          result: null,
+          message: "The saved interview is temporarily unavailable.",
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [interviewId, retryKey]);
+
+  if (interviewId && historical.status === "loading") {
+    return (
+      <div
+        aria-label="Loading saved interview result"
+        className="flex min-h-[60vh] items-center justify-center"
+      >
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+          <p className="mt-4 font-medium text-slate-600">
+            Loading saved results…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    interviewId &&
+    (historical.status === "not-found" || historical.status === "error")
+  ) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="max-w-lg rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <h1 className="text-2xl font-bold text-slate-900">
+            {historical.status === "not-found"
+              ? "Interview not found"
+              : "Unable to load results"}
+          </h1>
+          <p className="mt-3 text-slate-600">{historical.message}</p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            {historical.status === "error" && (
+              <button
+                type="button"
+                onClick={retryHistoricalResult}
+                className="min-h-11 rounded-xl bg-blue-600 px-5 font-semibold text-white hover:bg-blue-700"
+              >
+                Try Again
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate("/history")}
+              className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Back to History
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const result = interviewId
+    ? historical.status === "success"
+      ? historical.result
+      : null
+    : freshResult;
 
   if (!result) {
     return (
@@ -69,8 +180,11 @@ function ResultsPage() {
         />
 
         <ResultsActions
-          onBackToDashboard={() => navigate("/dashboard")}
+          onBackToDashboard={() =>
+            navigate(interviewId ? "/history" : "/dashboard")
+          }
           onNewInterview={() => navigate("/create-interview")}
+          backLabel={interviewId ? "Back to History" : "Back to Dashboard"}
         />
       </div>
     </main>

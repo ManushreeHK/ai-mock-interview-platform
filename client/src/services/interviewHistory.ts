@@ -3,78 +3,39 @@ import type {
   InterviewHistoryItem,
   InterviewHistoryPage,
 } from "../types/interview-history";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isScore(value: unknown): value is number {
-  return (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    value >= 0 &&
-    value <= 10
-  );
-}
-
-function parseHistoryItem(value: unknown): InterviewHistoryItem | null {
-  if (
-    !isRecord(value) ||
-    typeof value.interviewId !== "string" ||
-    typeof value.createdAt !== "string" ||
-    !Number.isFinite(Date.parse(value.createdAt)) ||
-    typeof value.role !== "string" ||
-    typeof value.interviewType !== "string" ||
-    typeof value.difficulty !== "string" ||
-    value.status !== "completed" ||
-    !isScore(value.overallScore) ||
-    !isScore(value.communication) ||
-    !isScore(value.technicalKnowledge) ||
-    !isScore(value.confidence)
-  ) {
-    return null;
-  }
-
-  return {
-    interviewId: value.interviewId,
-    createdAt: value.createdAt,
-    role: value.role,
-    interviewType: value.interviewType,
-    difficulty: value.difficulty,
-    overallScore: value.overallScore,
-    communication: value.communication,
-    technicalKnowledge: value.technicalKnowledge,
-    confidence: value.confidence,
-    status: "completed",
-  };
-}
-
-function parseHistoryPage(value: unknown): InterviewHistoryPage {
-  if (
-    !isRecord(value) ||
-    !Array.isArray(value.items) ||
-    !(value.nextToken === null || typeof value.nextToken === "string")
-  ) {
-    throw new Error("Invalid interview history response.");
-  }
-
-  const items = value.items
-    .map(parseHistoryItem)
-    .filter((item): item is InterviewHistoryItem => item !== null);
-  const ignoredRecords = value.items.length - items.length;
-
-  if (ignoredRecords > 0) {
-    console.warn("Ignored malformed interview history records.", {
-      ignoredRecords,
-    });
-  }
-
-  const nextToken =
-    typeof value.nextToken === "string" ? value.nextToken : null;
-  return { items, nextToken };
-}
+import type { SavedInterviewResult } from "../types/evaluation";
+import {
+  getInterviewHistoryDetailPath,
+  parseHistoryPage,
+  parseSavedInterviewResult,
+} from "../utils/interviewHistoryValidation";
 
 let inFlightHistoryRequest: Promise<InterviewHistoryItem[]> | null = null;
+const inFlightPages = new Map<string, Promise<InterviewHistoryPage>>();
+const inFlightDetails = new Map<
+  string,
+  Promise<SavedInterviewResult>
+>();
+
+export function fetchInterviewHistoryPage(
+  limit = 20,
+  nextToken?: string
+) {
+  const key = `${limit}:${nextToken ?? "first"}`;
+  const existing = inFlightPages.get(key);
+  if (existing) return existing;
+
+  const request = api
+    .get<unknown>("/interview/history", {
+      params: { limit, ...(nextToken ? { nextToken } : {}) },
+    })
+    .then((response) => parseHistoryPage(response.data))
+    .finally(() => {
+      inFlightPages.delete(key);
+    });
+  inFlightPages.set(key, request);
+  return request;
+}
 
 async function loadAllInterviewHistory() {
   const items: InterviewHistoryItem[] = [];
@@ -82,10 +43,10 @@ async function loadAllInterviewHistory() {
   let nextToken: string | null = null;
 
   do {
-    const response = await api.get<unknown>("/interview/history", {
-      params: { limit: 100, ...(nextToken ? { nextToken } : {}) },
-    });
-    const page = parseHistoryPage(response.data);
+    const page = await fetchInterviewHistoryPage(
+      100,
+      nextToken ?? undefined
+    );
     items.push(...page.items);
 
     if (page.nextToken && seenTokens.has(page.nextToken)) {
@@ -108,4 +69,27 @@ export function fetchInterviewHistory() {
   }
 
   return inFlightHistoryRequest;
+}
+
+export async function fetchInterviewHistoryDetail(interviewId: string) {
+  const existing = inFlightDetails.get(interviewId);
+  if (existing) return existing;
+
+  const request = api
+    .get<unknown>(getInterviewHistoryDetailPath(interviewId))
+    .then((response) => {
+      if (typeof response.data !== "object" || response.data === null) {
+        throw new Error("Invalid interview result response.");
+      }
+      const result = parseSavedInterviewResult(
+        (response.data as Record<string, unknown>).result
+      );
+      if (!result) throw new Error("Invalid interview result response.");
+      return result;
+    })
+    .finally(() => {
+      inFlightDetails.delete(interviewId);
+    });
+  inFlightDetails.set(interviewId, request);
+  return request;
 }

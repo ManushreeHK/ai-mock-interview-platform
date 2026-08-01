@@ -60,7 +60,7 @@ Profile claims are for display. API authorization and data ownership use the ver
 
 ## Protected routes
 
-`ProtectedRoute` displays a loading state while authentication is resolving, redirects unauthenticated visitors to `/login`, and renders children for authenticated sessions. It currently wraps `/dashboard`, `/create-interview`, `/results`, `/profile`, `/settings`, `/subscription`, and `/help`.
+`ProtectedRoute` displays a loading state while authentication is resolving, redirects unauthenticated visitors to `/login`, and renders children for authenticated sessions. It currently wraps `/dashboard`, `/create-interview`, `/results`, `/history`, `/history/:interviewId`, `/profile`, `/settings`, `/subscription`, and `/help`.
 
 Implementation note: `/interview` is not wrapped by `ProtectedRoute`. It normally receives questions from the protected creation page through router state, and its evaluate API request remains protected server-side. Direct route protection is a known gap.
 

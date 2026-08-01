@@ -49,6 +49,7 @@ Authentication and CORS errors additionally include `"success": false`. The gene
 | 503 | `AI_SERVICE_BUSY` | Retryable AI failures exhausted or the AI deadline elapsed |
 | 503 | `RESULT_SAVE_FAILED` | Evaluation succeeded but DynamoDB persistence failed |
 | 503 | `HISTORY_UNAVAILABLE` | History query failed |
+| 404 | `INTERVIEW_NOT_FOUND` | Saved interview is absent, invalid, or not owned by the current user |
 | 500 | `INTERNAL_SERVER_ERROR` | Unexpected evaluation failure |
 
 ## `GET /health`
@@ -249,3 +250,24 @@ curl --get "https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api/int
   --data-urlencode "nextToken=<OPAQUE_NEXT_TOKEN>"
 ```
 
+## `GET /api/interview/history/:interviewId`
+
+Returns one complete saved result for the authenticated user. The server validates the timestamp/UUID identifier and performs a DynamoDB `GetItem` with the composite key `{ userId: verified Cognito sub, interviewId }`. It never accepts `userId` from the URL or query string. A missing record and a record owned by another user both return the same 404 response.
+
+Response `200` contains `{ "result": <complete saved interview result> }`, including questions, answers, strengths, weaknesses, all validated scores, and `questionEvaluation` required by the Results page.
+
+Possible responses:
+
+- `200` complete saved result
+- `401` authentication error
+- `404 INTERVIEW_NOT_FOUND`
+- `503 HISTORY_UNAVAILABLE` for a DynamoDB read failure
+- `500 INTERNAL_SERVER_ERROR` for an invalid stored result or unexpected failure
+
+Because `interviewId` contains `#`, clients must URL-encode the path segment:
+
+```bash
+curl \
+  -H "Authorization: Bearer <COGNITO_ACCESS_TOKEN>" \
+  "https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api/interview/history/<URL_ENCODED_INTERVIEW_ID>"
+```

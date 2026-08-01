@@ -15,3 +15,10 @@ export type InterviewHistoryPage = {
   items: InterviewHistoryItem[];
   nextToken: string | null;
 };
+
+export type ApiErrorShape = {
+  error: {
+    code: string;
+    message: string;
+  };
+};

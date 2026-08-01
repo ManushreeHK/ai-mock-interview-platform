@@ -11,6 +11,7 @@ import {
   ChevronDown,
   CircleHelp,
   CreditCard,
+  History,
   LogOut,
   Settings,
   User,
@@ -28,7 +29,7 @@ import {
 } from "../../utils/profileDropdown";
 import ProfileDropdownItem from "./ProfileDropdownItem";
 
-const menuIcons = [User, Settings, CreditCard, CircleHelp] as const;
+const menuIcons = [User, History, Settings, CreditCard, CircleHelp] as const;
 const menuItemCount = profileMenuLinks.length + 1;
 
 export default function ProfileDropdown() {

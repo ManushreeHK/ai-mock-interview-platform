@@ -18,6 +18,7 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 | Results | Real saved evaluation rendered from router state |
 | DynamoDB persistence | Conditional `PutItem` of completed results |
 | Real dashboard metrics | Derived from paginated `Query` history, not mock data |
+| Interview history | Protected paginated list with search, loaded-record filters/sorting, and saved-result detail |
 | Profile menu | Accessible authenticated dropdown with normalized profile data and logout |
 | Account placeholders | Protected profile, settings, subscription, and help routes; unfinished actions are labeled Coming Soon |
 | Amplify deployment | Production frontend URL is active/verified |
@@ -32,12 +33,10 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 | --- | --- |
 | Route protection | `/interview` is not wrapped by `ProtectedRoute`; backend APIs are protected |
 | Behavioral selection | Form option exists, but there is no behavioral-specific prompt/evaluation flow |
-| Interview history navigation | Sidebar links to `/history`, but App routes contain no history page |
 | In-flight recovery | Answers survive an evaluation error while mounted, not refresh/navigation |
 
 ## Not yet implemented
 
-- Full interview-history page
 - Coding interview platform/editor/execution
 - Behavioral-specific mode
 - Subscription billing

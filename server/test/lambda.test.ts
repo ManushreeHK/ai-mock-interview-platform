@@ -111,6 +111,10 @@ for (const [method, path] of [
   ["POST", "/api/interview/generate"],
   ["POST", "/api/interview/evaluate"],
   ["GET", "/api/interview/history"],
+  [
+    "GET",
+    "/api/interview/history/2026-08-01T12%3A00%3A00.000Z%23550e8400-e29b-41d4-a716-446655440000",
+  ],
 ] as const) {
   test(`Lambda adapter protects ${method} ${path}`, async () => {
     const response = await handler(event(method, path), context);

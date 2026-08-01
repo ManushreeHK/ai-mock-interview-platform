@@ -12,8 +12,10 @@ import { runDeduplicated } from "../services/request-deduplication.js";
 import { EvaluationStageError } from "../errors/evaluation.errors.js";
 import {
   getInterviewHistory,
+  getInterviewHistoryDetail,
   HistoryUnavailableError,
   InvalidHistoryRequestError,
+  InterviewNotFoundError,
 } from "../services/interview-history.service.js";
 
 function requestKey(
@@ -273,3 +275,49 @@ export function createGetInterviewHistoryHandler(
 
 export const getInterviewHistoryForCurrentUser =
   createGetInterviewHistoryHandler();
+
+type HistoryDetailOperation = typeof getInterviewHistoryDetail;
+
+export function createGetInterviewHistoryDetailHandler(
+  detailOperation: HistoryDetailOperation = getInterviewHistoryDetail
+) {
+  return async (req: Request, res: Response) => {
+    try {
+      const result = await detailOperation(
+        req.authenticatedUser!.sub,
+        req.params.interviewId
+      );
+      res.status(200).json({ result });
+    } catch (error) {
+      if (error instanceof InterviewNotFoundError) {
+        res.status(404).json({
+          error: {
+            code: "INTERVIEW_NOT_FOUND",
+            message: error.message,
+          },
+        });
+        return;
+      }
+
+      if (error instanceof HistoryUnavailableError) {
+        res.status(503).json({
+          error: {
+            code: "HISTORY_UNAVAILABLE",
+            message: error.message,
+          },
+        });
+        return;
+      }
+
+      res.status(500).json({
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to load the interview result.",
+        },
+      });
+    }
+  };
+}
+
+export const getInterviewHistoryDetailForCurrentUser =
+  createGetInterviewHistoryDetailHandler();

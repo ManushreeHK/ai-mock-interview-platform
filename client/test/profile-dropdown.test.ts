@@ -65,7 +65,7 @@ test("initials fallback supports full names and missing pictures", () => {
 test("menu routes point to the protected profile pages", () => {
   assert.deepEqual(
     profileMenuLinks.map(({ path }) => path),
-    ["/profile", "/settings", "/subscription", "/help"]
+    ["/profile", "/history", "/settings", "/subscription", "/help"]
   );
 });
 

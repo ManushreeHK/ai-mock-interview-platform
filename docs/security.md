@@ -28,10 +28,10 @@ Lambda does not use static AWS access keys. AWS supplies temporary execution-rol
 The SAM role grants:
 
 - CloudWatch log creation/writes through `AWSLambdaBasicExecutionRole`;
-- `dynamodb:PutItem` and `dynamodb:Query` on the configured production table ARN;
+- `dynamodb:PutItem`, `dynamodb:Query`, and `dynamodb:GetItem` on the configured production table ARN;
 - `secretsmanager:GetSecretValue` on the named Gemini secret ARN pattern.
 
-There is no production DynamoDB `Scan`, update, delete, batch, table-management, or development-table permission. The previously used `interviewace-local` identity had broad DynamoDB permissions; reduce it to development-table-only access, ideally only the operations needed (`PutItem`, `Query`, and narrowly justified diagnostics).
+There is no production DynamoDB `Scan`, update, delete, batch, table-management, or development-table permission. The previously used `interviewace-local` identity had broad DynamoDB permissions; reduce it to development-table-only access, ideally only the operations needed (`PutItem`, `Query`, `GetItem`, and narrowly justified diagnostics).
 
 ## Environment isolation
 
@@ -69,4 +69,3 @@ These are recommendations, not currently implemented features:
 - Add server-side request schemas and payload-size/array-length limits.
 - Add durable idempotency if duplicate writes must be prevented across Lambda instances.
 - Review Cognito password, MFA, recovery, token lifetime, and deletion policies outside this repository.
-

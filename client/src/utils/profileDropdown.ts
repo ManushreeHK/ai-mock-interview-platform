@@ -1,5 +1,6 @@
 export const profileMenuLinks = [
   { label: "Profile", path: "/profile" },
+  { label: "Interview History", path: "/history" },
   { label: "Settings", path: "/settings" },
   { label: "Subscription", path: "/subscription" },
   { label: "Help & Support", path: "/help" },

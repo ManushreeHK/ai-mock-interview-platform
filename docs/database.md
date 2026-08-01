@@ -92,6 +92,12 @@ The API default page size is 20; the maximum is 100. `LastEvaluatedKey` is encod
 
 The Dashboard client retrieves every page at up to 100 records, re-sorts by `createdAt`, and derives totals and metrics locally. This is suitable for the current data volume but may require bounded time ranges or precomputed aggregates as histories grow.
 
+The Interview History page retrieves only its first 20-record page initially and appends subsequent pages through the opaque token. Search, filters, sorting, and summary cards apply only to records loaded so far. The UI labels the count accordingly rather than presenting it as a table-wide count.
+
+## Saved-result access pattern
+
+`GET /api/interview/history/:interviewId` uses `GetItem` with both key values: the verified Cognito `sub` and the validated `interviewId` path value. No user identifier is accepted from request input. A composite-key miss returns 404, including when the interview ID belongs to another partition. The complete item is validated before return.
+
 ## Score fields
 
 These stored numbers are validated as finite values in the inclusive `0`–`10` range:
@@ -111,6 +117,7 @@ The production Lambda role defined by `template.yaml` has only:
 ```text
 dynamodb:PutItem
 dynamodb:Query
+dynamodb:GetItem
 ```
 
-These actions are scoped to the configured production table ARN. It has no `Scan`, delete, update, batch, table-management, or development-table permission. Local credentials should likewise be reduced to `PutItem` and `Query` on `InterviewAceInterviews-dev` where practical.
+These actions are scoped to the configured production table ARN. It has no `Scan`, delete, update, batch, table-management, or development-table permission. Local credentials should likewise be reduced to `PutItem`, `Query`, and `GetItem` on `InterviewAceInterviews-dev` where practical.

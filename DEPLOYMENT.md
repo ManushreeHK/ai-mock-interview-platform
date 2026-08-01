@@ -120,7 +120,7 @@ The repository-root `template.yaml` defines:
 - API Gateway mock `OPTIONS` integration for production CORS preflight
 - Lambda invoke permission scoped to this REST API
 - Lambda basic CloudWatch logging permissions
-- DynamoDB `PutItem` and `Query` on the production table only
+- DynamoDB `PutItem`, `Query`, and `GetItem` on the production table only
 - Secrets Manager `GetSecretValue` on the Gemini secret only
 - outputs for the invoke URL and exact Amplify API base URL
 
@@ -137,6 +137,7 @@ logs:CreateLogStream
 logs:PutLogEvents
 dynamodb:PutItem
 dynamodb:Query
+dynamodb:GetItem
 secretsmanager:GetSecretValue
 ```
 
@@ -446,6 +447,17 @@ sam validate --lint --region ap-south-1
 sam build
 sam deploy
 ```
+
+The Interview History detail feature changes both Lambda code and its execution
+role by adding table-scoped `dynamodb:GetItem`. Deploy the backend update before
+publishing frontend links to `/history/:interviewId`. This repository change
+does not deploy automatically.
+
+After the backend update succeeds, commit and push the client changes to the
+Amplify-connected `main` branch. Amplify rebuilds the Vite application using
+the existing `VITE_API_BASE_URL`; no new frontend environment variable is
+required. Verify list pagination and a refresh of a saved-result URL after both
+deployments.
 
 Review the CloudFormation change set before execution. If an update fails,
 inspect stack events and allow CloudFormation's automatic rollback to finish:

@@ -1,4 +1,5 @@
 import {
+  GetCommand,
   PutCommand,
   QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
@@ -53,6 +54,17 @@ export function buildInterviewHistoryQuery(
   };
 }
 
+export function buildInterviewResultGet(
+  userId: string,
+  interviewId: string
+) {
+  return {
+    TableName: env.interviewsTableName,
+    Key: { userId, interviewId },
+    ConsistentRead: false,
+  };
+}
+
 export async function saveInterviewResult(
   input: CreateInterviewResult
 ): Promise<InterviewResult> {
@@ -98,4 +110,15 @@ export async function getInterviewResultsByUser(
           }
         : undefined,
   };
+}
+
+export async function getInterviewResultById(
+  userId: string,
+  interviewId: string
+): Promise<unknown> {
+  const response = await documentClient.send(
+    new GetCommand(buildInterviewResultGet(userId, interviewId))
+  );
+
+  return response.Item;
 }

@@ -14,6 +14,7 @@ import ProfilePage from "./pages/Profile/ProfilePage";
 import SettingsPage from "./pages/Settings/SettingsPage";
 import SubscriptionPage from "./pages/Subscription/SubscriptionPage";
 import HelpPage from "./pages/Help/HelpPage";
+import HistoryPage from "./pages/History/HistoryPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ProtectedAppErrorBoundary from "./components/routes/ProtectedAppErrorBoundary";
 
@@ -66,6 +67,22 @@ function App() {
       element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/history"
+      element={
+        <ProtectedRoute>
+          <HistoryPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/history/:interviewId"
+      element={
+        <ProtectedRoute>
+          <ResultsPage />
         </ProtectedRoute>
       }
     />

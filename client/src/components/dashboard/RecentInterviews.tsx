@@ -1,5 +1,6 @@
 import InterviewCard from "./InterviewCard";
 import type { InterviewHistoryItem } from "../../types/interview-history";
+import { Link } from "react-router-dom";
 
 function formatDate(createdAt: string) {
   return new Date(createdAt).toLocaleDateString(undefined, {
@@ -31,9 +32,12 @@ export default function RecentInterviews({
             Your latest AI interview sessions
           </p>
         </div>
-        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+        <Link
+          to="/history"
+          className="rounded-lg px-3 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
           View All
-        </button>
+        </Link>
       </div>
 
       {interviews.length === 0 ? (

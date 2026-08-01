@@ -26,7 +26,7 @@ flowchart LR
   Express -->|verify JWT| Cognito
   Lambda -->|cold-start secret load| Secrets
   Express -->|generate/evaluate, 24 s deadline| Gemini
-  Express -->|PutItem / Query| DynamoDB
+  Express -->|PutItem / Query / GetItem| DynamoDB
   Lambda -->|JSON logs and metrics| CloudWatch
 ```
 
@@ -40,7 +40,7 @@ flowchart LR
 6. `server/src/lambda.ts` loads the Gemini secret before dynamically importing the Express app on a cold start, then caches the adapter for warm invocations.
 7. Express applies CORS and JSON parsing. Interview routes verify the Cognito access token.
 8. The controller uses the verified `sub` for deduplication and all user-owned data operations.
-9. Generate requests call Gemini. Evaluate requests call Gemini, validate the response, and conditionally write a completed item to DynamoDB. History requests issue a DynamoDB `Query`.
+9. Generate requests call Gemini. Evaluate requests call Gemini, validate the response, and conditionally write a completed item to DynamoDB. History lists issue `Query`; saved-result detail requests issue a composite-key `GetItem`.
 10. Lambda/API Gateway returns JSON to the browser; operational logs go to CloudWatch.
 
 ## Authentication flow
@@ -87,7 +87,7 @@ Cognito owns accounts, verification, federated identity, sessions, and tokens. E
 
 ### DynamoDB
 
-One table per environment stores completed result documents. The key design supports descending, per-user history through `Query`; the application does not use `Scan`. See [Database](database.md).
+One table per environment stores completed result documents. The key design supports descending, per-user history through `Query` and user-scoped saved-result reads through `GetItem`; the application does not use `Scan`. See [Database](database.md).
 
 ### Secrets Manager
 

@@ -17,11 +17,12 @@ The email/password and Google sign-in flows, question generation, interview sess
 - Structured Gemini evaluation with overall, communication, technical-knowledge, confidence, and per-question scores
 - Score validation, retry/fallback handling, in-flight duplicate suppression, and retryable evaluation without clearing answers
 - Completed-result persistence and paginated per-user DynamoDB history
+- Searchable, filterable, sortable Interview History with incremental pagination and refresh-safe saved results
 - Real dashboard totals, average/best score, streak, seven-day progress, recent interviews, and deterministic insights
 
 ## Screens and user flow
 
-The implemented public routes are `/`, `/login`, `/signup`, and `/verify`. Authenticated application routes are `/dashboard`, `/create-interview`, `/results`, `/profile`, `/settings`, `/subscription`, and `/help`. Settings, paid subscription options, and support actions are explicitly Coming Soon placeholders. The `/interview` route carries generated questions in router state and is not currently wrapped by `ProtectedRoute`; its generate/evaluate API calls still require a valid Cognito access token.
+The implemented public routes are `/`, `/login`, `/signup`, and `/verify`. Authenticated application routes are `/dashboard`, `/create-interview`, `/results`, `/history`, `/history/:interviewId`, `/profile`, `/settings`, `/subscription`, and `/help`. Settings, paid subscription options, and support actions are explicitly Coming Soon placeholders. The `/interview` route carries generated questions in router state and is not currently wrapped by `ProtectedRoute`; its generate/evaluate API calls still require a valid Cognito access token.
 
 ```text
 Landing -> sign up/sign in -> Dashboard -> Create Interview
@@ -29,7 +30,7 @@ Landing -> sign up/sign in -> Dashboard -> Create Interview
         -> Results -> Dashboard history and metrics
 ```
 
-There is no implemented full history route despite a sidebar link to `/history`. Coding practice and behavioral-specific workflows are also not implemented.
+Coding practice and behavioral-specific workflows are not implemented.
 
 ## Architecture
 
@@ -128,6 +129,7 @@ Amplify uses Cognito authorization-code OAuth with `openid email profile`. `Auth
 | `POST` | `/api/interview/generate` | Cognito access token | Generate questions |
 | `POST` | `/api/interview/evaluate` | Cognito access token | Evaluate and save a result |
 | `GET` | `/api/interview/history` | Cognito access token | Read paginated user history |
+| `GET` | `/api/interview/history/:interviewId` | Cognito access token | Read one complete saved result |
 
 See [API Reference](docs/api.md) for request/response contracts and errors.
 
@@ -138,7 +140,7 @@ See [API Reference](docs/api.md) for request/response contracts and errors.
 - Partition key: `userId` (String)
 - Sort key: `interviewId` (String), formatted as `<ISO timestamp>#<UUID>`
 - Writes: conditional `PutItem`
-- History: descending `Query` by authenticated user; no `Scan`
+- History: descending `Query` and composite-key `GetItem` by authenticated user; no `Scan`
 
 ## AI reliability
 
@@ -178,7 +180,6 @@ sam build
 
 ## Known limitations
 
-- No full interview-history page or route; recent history appears on the dashboard.
 - `/interview` itself is not protected by `ProtectedRoute`, though its API operations are authenticated.
 - Behavioral can be selected in the form but uses the same generic generation/evaluation pipeline; there is no behavioral-specific mode.
 - Generated questions, active interview state, and result navigation state are not persisted across browser refreshes.
@@ -188,7 +189,7 @@ sam build
 
 ## Planned next features
 
-The repository does not implement these features yet: a full history page, coding interview platform, dedicated behavioral workflow, subscription billing, admin dashboard, custom domain, PDF reports, advanced monitoring, backend CI/CD automation, and asynchronous evaluation.
+The repository does not implement these features yet: a coding interview platform, dedicated behavioral workflow, subscription billing, admin dashboard, custom domain, PDF reports, advanced monitoring, backend CI/CD automation, and asynchronous evaluation.
 
 ## Documentation
 
