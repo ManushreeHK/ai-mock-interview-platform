@@ -7,14 +7,16 @@ import api from "../../services/api";
 import InterviewType from "../../components/InterviewType";
 import { Sparkles } from "lucide-react";
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
+import { loadSettings } from "../../utils/settings";
 
 function CreateInterviewPage() {
   const navigate = useNavigate();
+  const [accountDefaults] = useState(loadSettings);
 
   const [formData, setFormData] = useState({
     role: "",
     experience: "",
-    difficulty: "",
+    difficulty: accountDefaults.defaultDifficulty,
     domain: "",
     language: "",
     position: "",
@@ -51,7 +53,9 @@ function CreateInterviewPage() {
   ];
 
   const difficulties = ["Easy", "Medium", "Hard"];
-  const [interviewType, setInterviewType] = useState("technical");
+  const [interviewType, setInterviewType] = useState<string>(
+    accountDefaults.defaultInterviewType
+  );
 
   const domains = [
     "Web Development",

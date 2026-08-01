@@ -8,10 +8,10 @@ export default function AppLayout() {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
-          <p className="mt-4 font-medium text-slate-600">
+          <p className="mt-4 font-medium text-slate-600 dark:text-slate-300">
             Checking authentication...
           </p>
         </div>
@@ -25,7 +25,7 @@ export default function AppLayout() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
         <div className="max-w-md rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm">
           <h1 className="text-xl font-bold text-slate-900">
             Unable to load your profile
@@ -39,7 +39,7 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
 
       <div className="flex flex-1 flex-col">

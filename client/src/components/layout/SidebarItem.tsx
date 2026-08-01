@@ -18,13 +18,13 @@ export default function SidebarItem({
 }: SidebarItemProps) {
   if (disabled) {
     return (
-      <div className="flex cursor-not-allowed items-center justify-between rounded-xl px-4 py-3 text-slate-400">
+      <div className="flex cursor-not-allowed items-center justify-between rounded-xl px-4 py-3 text-slate-400 dark:text-slate-500">
         <div className="flex items-center gap-3">
           <Icon size={20} />
           <span>{label}</span>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium dark:bg-slate-800">
           Soon
         </span>
       </div>
@@ -39,7 +39,7 @@ export default function SidebarItem({
           "flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200",
           isActive
             ? "bg-blue-600 text-white shadow-sm"
-            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         )
       }
     >

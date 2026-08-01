@@ -42,7 +42,7 @@ async function handleLogin(e: React.FormEvent) {
 }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-950">
       <form
         onSubmit={handleLogin}
         className="w-96 rounded-xl bg-white p-8 shadow-lg"

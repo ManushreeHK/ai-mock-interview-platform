@@ -15,13 +15,14 @@ export type AuthProfile = {
   displayName: string;
   email: string;
   picture?: string;
+  signInMethod: "google" | "email" | "unknown";
 };
 
 export type AuthContextValue = {
   status: AuthStatus;
   user: AuthenticatedUser | null;
   profile: AuthProfile | null;
-  refreshAuth: () => Promise<boolean>;
+  refreshAuth: (options?: { showLoading?: boolean }) => Promise<boolean>;
 };
 
 export const AuthContext = createContext<AuthContextValue | null>(

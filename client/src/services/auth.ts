@@ -4,7 +4,9 @@ import {
   signOut,
   getCurrentUser,
   fetchAuthSession,
-  confirmSignUp
+  confirmSignUp,
+  updatePassword,
+  updateUserAttributes,
 } from "aws-amplify/auth";
 
 
@@ -48,4 +50,19 @@ export async function currentUser() {
 
 export async function getSession() {
   return await fetchAuthSession();
+}
+
+export async function updateDisplayNameAttribute(name: string) {
+  await updateUserAttributes({ userAttributes: { name } });
+}
+
+export async function forceRefreshSession() {
+  await fetchAuthSession({ forceRefresh: true });
+}
+
+export async function changePassword(
+  oldPassword: string,
+  newPassword: string
+) {
+  await updatePassword({ oldPassword, newPassword });
 }

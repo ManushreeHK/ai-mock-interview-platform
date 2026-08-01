@@ -29,8 +29,8 @@ export default function Navbar() {
     <header
       className={`sticky top-0 z-50 border-b transition ${
         scrolled
-          ? "border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xl"
-          : "border-transparent bg-white/95"
+          ? "border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/90"
+          : "border-transparent bg-white/95 dark:bg-slate-950/95"
       }`}
     >
       <nav className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
@@ -88,7 +88,7 @@ export default function Navbar() {
       </nav>
 
       {open && (
-        <div className="border-t border-slate-100 bg-white px-5 py-5 shadow-xl lg:hidden">
+        <div className="border-t border-slate-100 bg-white px-5 py-5 shadow-xl dark:border-slate-700 dark:bg-slate-900 lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
             {links.map(([label, href]) => (
               <a

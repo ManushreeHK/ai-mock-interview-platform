@@ -41,13 +41,14 @@ declare global {
   }
 }
 
-export function useSpeechRecognition() {
+export function useSpeechRecognition(enabled = true) {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -89,7 +90,7 @@ export function useSpeechRecognition() {
     return () => {
       recognition.stop();
     };
-  }, []);
+  }, [enabled]);
 
   const startListening = () => {
     if (!recognitionRef.current || isListening) return;

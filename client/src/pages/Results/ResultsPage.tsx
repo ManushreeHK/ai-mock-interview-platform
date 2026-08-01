@@ -129,7 +129,7 @@ function ResultsPage() {
 
   if (!result) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
           <h2 className="text-3xl font-bold text-slate-900">
             No results found
@@ -152,7 +152,7 @@ function ResultsPage() {
   const report = result.evaluation;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:px-6 lg:py-10">
       <div className="mx-auto max-w-6xl space-y-10">
         <ResultsHero
           role={result.role}

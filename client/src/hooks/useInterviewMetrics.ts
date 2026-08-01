@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchInterviewHistory } from "../services/interviewHistory";
+import type { InterviewHistoryItem } from "../types/interview-history";
 import {
   calculateDashboardMetrics,
   type DashboardMetrics,
@@ -9,6 +10,7 @@ type InterviewMetricsState = {
   metrics: DashboardMetrics | null;
   isLoading: boolean;
   error: string;
+  history: InterviewHistoryItem[];
 };
 
 export function useInterviewMetrics(): InterviewMetricsState {
@@ -16,6 +18,7 @@ export function useInterviewMetrics(): InterviewMetricsState {
     metrics: null,
     isLoading: true,
     error: "",
+    history: [],
   });
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export function useInterviewMetrics(): InterviewMetricsState {
             metrics: calculateDashboardMetrics(history),
             isLoading: false,
             error: "",
+            history,
           });
         }
       })
@@ -37,6 +41,7 @@ export function useInterviewMetrics(): InterviewMetricsState {
             metrics: null,
             isLoading: false,
             error: "Metrics are temporarily unavailable.",
+            history: [],
           });
         }
       });

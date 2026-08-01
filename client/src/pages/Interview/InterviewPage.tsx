@@ -16,6 +16,7 @@ import { useTimer } from "../../hooks/useTimer";
 
 import api from "../../services/api";
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
+import { loadSettings } from "../../utils/settings";
 
 function appendRecognizedSpeech(answer: string, transcript: string) {
   const recognizedSpeech = transcript.trim();
@@ -30,6 +31,7 @@ function appendRecognizedSpeech(answer: string, transcript: string) {
 function InterviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [accountSettings] = useState(loadSettings);
 
 const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
@@ -57,7 +59,23 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     startListening,
     stopListening,
     clearTranscript,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition(accountSettings.voiceInputEnabled);
+
+  useEffect(() => {
+    if (
+      !accountSettings.confirmBeforeLeavingInterview ||
+      questions.length === 0
+    ) {
+      return;
+    }
+
+    const confirmLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", confirmLeave);
+    return () => window.removeEventListener("beforeunload", confirmLeave);
+  }, [accountSettings.confirmBeforeLeavingInterview, questions.length]);
 
 
 const submitInterview = useCallback(async () => {
@@ -135,7 +153,7 @@ const handleTimeUp = useCallback(() => {
 
   if (!questions.length) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
         <div className="rounded-xl bg-white p-10 text-center shadow-xl">
           <h2 className="mb-4 text-3xl font-bold">
             No Interview Found
@@ -213,7 +231,7 @@ const handleFinish = () => {
 };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-6 py-10">
+    <div className="min-h-screen bg-slate-100 px-6 py-10 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-10 shadow-xl">
 
         <div className="mb-10 flex items-center justify-between">
@@ -244,6 +262,7 @@ const handleFinish = () => {
           onAnswerChange={handleAnswerChange}
           onStart={handleStartRecording}
           onStop={handleStopRecording}
+          voiceEnabled={accountSettings.voiceInputEnabled}
         />
 
       <InterviewNavigation

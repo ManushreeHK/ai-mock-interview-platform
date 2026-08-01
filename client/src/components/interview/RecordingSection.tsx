@@ -7,6 +7,7 @@ type RecordingSectionProps = {
   onAnswerChange: (value: string) => void;
   onStart: () => void;
   onStop: () => void;
+  voiceEnabled?: boolean;
 };
 
 export default function RecordingSection({
@@ -15,6 +16,7 @@ export default function RecordingSection({
   onAnswerChange,
   onStart,
   onStop,
+  voiceEnabled = true,
 }: RecordingSectionProps) {
   return (
     <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -30,12 +32,18 @@ export default function RecordingSection({
             </h2>
 
             <p className="text-sm text-slate-500">
-              Record your response or edit the transcript manually.
+              {voiceEnabled
+                ? "Record your response or edit the transcript manually."
+                : "Enter your response manually. Voice input is disabled."}
             </p>
           </div>
         </div>
 
-        {isListening ? (
+        {!voiceEnabled ? (
+          <span className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-500">
+            Voice input disabled in Settings
+          </span>
+        ) : isListening ? (
           <Button
             type="button"
             variant="danger"

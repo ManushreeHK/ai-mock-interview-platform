@@ -15,14 +15,14 @@ function Select({
 }: SelectProps) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-gray-700">
+      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">
         {label}
       </label>
 
       <select
         value={value}
         onChange={onChange}
-        className={`w-full rounded-lg border px-4 py-3 outline-none transition
+        className={`w-full rounded-lg border bg-white px-4 py-3 text-slate-900 outline-none transition dark:bg-slate-800 dark:text-slate-100
 
           ${
             error

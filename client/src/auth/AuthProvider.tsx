@@ -18,6 +18,7 @@ import {
   type AuthenticatedUser,
   type AuthStatus,
 } from "./AuthContext";
+import { determineSignInMethod } from "../utils/account";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -60,6 +61,7 @@ function createProfile(
     userId,
     displayName,
     email,
+    signInMethod: determineSignInMethod(idTokenPayload),
     ...(picture ? { picture } : {}),
   };
 }
@@ -113,8 +115,8 @@ export default function AuthProvider({
     }
   }, []);
 
-  const refreshAuth = useCallback(async () => {
-    setStatus("loading");
+  const refreshAuth = useCallback(async (options?: { showLoading?: boolean }) => {
+    if (options?.showLoading !== false) setStatus("loading");
 
     const authenticated = await resolveAuthenticatedSession();
 

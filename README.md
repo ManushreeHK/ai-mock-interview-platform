@@ -11,6 +11,7 @@ The email/password and Google sign-in flows, question generation, interview sess
 - Cognito email/password registration, email confirmation, login, logout, and Google federation
 - Centralized client authentication state and protected dashboard, creation, results, profile, settings, subscription, and help routes
 - Accessible authenticated profile dropdown with account details, keyboard navigation, protected page links, and logout
+- Functional account pages: Cognito display-name/password management, local interview/accessibility preferences, real beta usage, and in-app support guidance
 - Configurable interview generation for role, experience, difficulty, domain, language, and position
 - Ten Gemini-generated questions
 - Typed answers and browser Web Speech API transcription with a 20-minute interview timer

@@ -1,5 +1,5 @@
 import type { KeyboardEvent, Ref } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 
 type ProfileDropdownItemProps = {
@@ -34,17 +34,19 @@ export default function ProfileDropdownItem({
 
   if (to) {
     return (
-      <Link
+      <NavLink
         ref={itemRef as Ref<HTMLAnchorElement>}
         to={to}
         role="menuitem"
-        className={classes}
+        className={({ isActive }) =>
+          `${classes} ${isActive ? "bg-blue-50 text-blue-700" : ""}`
+        }
         onClick={onSelect}
         onKeyDown={onKeyDown}
       >
         <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
         <span>{label}</span>
-      </Link>
+      </NavLink>
     );
   }
 

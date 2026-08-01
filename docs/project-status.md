@@ -20,7 +20,7 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 | Real dashboard metrics | Derived from paginated `Query` history, not mock data |
 | Interview history | Protected paginated list with search, loaded-record filters/sorting, and saved-result detail |
 | Profile menu | Accessible authenticated dropdown with normalized profile data and logout |
-| Account placeholders | Protected profile, settings, subscription, and help routes; unfinished actions are labeled Coming Soon |
+| Account area | Protected Profile, Settings, Subscription, and Help pages with Cognito display-name/password actions, local preferences, real usage, and FAQ/troubleshooting content |
 | Amplify deployment | Production frontend URL is active/verified |
 | Lambda deployment | Node.js 22 arm64 function through serverless Express adapter |
 | API Gateway | Regional REST API with 28-second integration timeout |

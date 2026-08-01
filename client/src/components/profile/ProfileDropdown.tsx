@@ -159,15 +159,15 @@ export default function ProfileDropdown() {
         aria-controls={menuId}
         onClick={() => dispatch({ type: "toggle" })}
         onKeyDown={handleTriggerKeyDown}
-        className="flex min-h-12 max-w-[15rem] items-center gap-2 rounded-2xl px-2 py-1.5 text-left outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:gap-3 sm:px-3"
+        className="flex min-h-12 max-w-[15rem] items-center gap-2 rounded-2xl px-2 py-1.5 text-left outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 sm:gap-3 sm:px-3"
       >
         <span className="relative shrink-0">
           {renderAvatar("h-10 w-10 sm:h-11 sm:w-11")}
-          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900" />
         </span>
 
         <span className="hidden min-w-0 md:block">
-          <span className="block truncate font-semibold text-slate-900">
+          <span className="block truncate font-semibold text-slate-900 dark:text-slate-100">
             {displayName}
           </span>
           <span className="block truncate text-xs text-slate-500">
@@ -188,7 +188,7 @@ export default function ProfileDropdown() {
         role="menu"
         aria-label="Profile menu"
         aria-hidden={!state.isOpen}
-        className={`absolute top-[calc(100%+0.75rem)] z-[100] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10 transition duration-150 ${profileDropdownViewportClasses} ${
+        className={`absolute top-[calc(100%+0.75rem)] z-[100] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10 transition duration-150 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40 ${profileDropdownViewportClasses} ${
           state.isOpen
             ? "visible scale-100 opacity-100"
             : "invisible scale-95 opacity-0 pointer-events-none"
@@ -197,7 +197,7 @@ export default function ProfileDropdown() {
         <div className="flex items-center gap-3 px-3 py-3">
           {renderAvatar("h-12 w-12")}
           <div className="min-w-0">
-            <p className="truncate font-semibold text-slate-900">
+            <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
               {displayName}
             </p>
             <p className="truncate text-sm text-slate-500">
@@ -206,7 +206,7 @@ export default function ProfileDropdown() {
           </div>
         </div>
 
-        <div className="mt-1 space-y-1 border-t border-slate-100 pt-2">
+        <div className="mt-1 space-y-1 border-t border-slate-100 pt-2 dark:border-slate-700">
           {profileMenuLinks.map((item, index) => (
             <ProfileDropdownItem
               key={item.path}
@@ -222,7 +222,7 @@ export default function ProfileDropdown() {
           ))}
         </div>
 
-        <div className="mt-2 border-t border-slate-200 pt-2">
+        <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
           <ProfileDropdownItem
             itemRef={(element) => {
               itemRefs.current[menuItemCount - 1] = element;

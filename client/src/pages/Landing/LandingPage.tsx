@@ -11,7 +11,7 @@ import TrustedFor from "../../components/landing/TrustedFor";
 
 export default function LandingPage() {
   return (
-    <div className="overflow-x-hidden bg-white text-slate-950">
+    <div className="overflow-x-hidden bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-100">
       <Navbar />
       <main>
         <HeroSection />

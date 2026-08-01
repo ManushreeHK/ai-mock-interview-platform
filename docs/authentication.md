@@ -58,6 +58,8 @@ The provider requires both access and ID tokens before marking a session authent
 
 Profile claims are for display. API authorization and data ownership use the verified access-token `sub`.
 
+The Profile page can update the mutable Cognito `name` attribute through Amplify. After a successful update, the client force-refreshes the Cognito session and silently refreshes `AuthProvider`, so the normalized display name updates without signing out. Email remains read-only. Native email/password users can change their password through Amplify's authenticated `updatePassword` flow; Google users are directed to Google for password management.
+
 ## Protected routes
 
 `ProtectedRoute` displays a loading state while authentication is resolving, redirects unauthenticated visitors to `/login`, and renders children for authenticated sessions. It currently wraps `/dashboard`, `/create-interview`, `/results`, `/history`, `/history/:interviewId`, `/profile`, `/settings`, `/subscription`, and `/help`.

@@ -32,7 +32,7 @@ function handleStartInterview() {
   }
 }
   return (
-    <nav className="sticky top-0 z-50 border-b bg-white">
+    <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <h1 className="text-2xl font-bold text-blue-600">
           InterviewAce AI

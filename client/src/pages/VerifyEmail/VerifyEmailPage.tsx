@@ -33,7 +33,7 @@ console.log("Location state:", location.state);
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-950">
       <form
         onSubmit={handleVerify}
         className="w-96 rounded-xl bg-white p-8 shadow-lg"

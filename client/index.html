@@ -5,6 +5,27 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>client</title>
+    <script>
+      (() => {
+        try {
+          const raw = localStorage.getItem("interviewace.settings.v1");
+          const value = raw ? JSON.parse(raw) : null;
+          const preference = ["light", "dark", "system"].includes(value?.appearance)
+            ? value.appearance
+            : "system";
+          const dark = preference === "dark" ||
+            (preference === "system" && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", Boolean(dark));
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch {
+          const dark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
