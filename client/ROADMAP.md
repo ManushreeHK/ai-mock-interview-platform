@@ -1,40 +1,5 @@
-# InterviewAce AI Roadmap
+# InterviewAce AI roadmap
 
-## Version 1.0
-
-- Authentication
-- Dashboard
-- Technical Interview
-- AI Evaluation
-- Results
-- History
-
----
-
-## Version 1.1
-
-- Google Login
-- Behavioral Interviews
-- Coding Interviews
-
----
-
-## Version 1.2
-
-- Resume Review
-
-- ATS Score
-
-- Company Specific Interviews
-
----
-
-## Version 2.0
-
-- AI Career Coach
-
-- Personalized Roadmaps
-
-- Mock Interview Marketplace
-
-- Team Accounts
+The authoritative implementation status and planned features are maintained in
+[`docs/project-status.md`](../docs/project-status.md). This file remains only as
+a pointer so client-local references do not present stale feature claims.

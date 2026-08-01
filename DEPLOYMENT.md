@@ -1,5 +1,8 @@
 # InterviewAce AI serverless deployment
 
+This runbook reflects the deployed `interviewace-api-prod` stack in
+`ap-south-1`. It does not deploy anything unless an operator runs the commands.
+
 Production architecture:
 
 - Frontend: AWS Amplify Hosting
@@ -154,6 +157,31 @@ data permissions are not included.
 
 ## Deployment order
 
+## Prerequisites
+
+- Node.js 22 or later and npm
+- AWS CLI v2 authenticated with local deployment credentials
+- AWS SAM CLI
+- esbuild (declared in `server/devDependencies`; install with `npm install`)
+- Permission to operate CloudFormation, Lambda, API Gateway, IAM, CloudWatch,
+  and the referenced DynamoDB and Secrets Manager resources
+- Existing Cognito User Pool/app client and both DynamoDB tables
+
+Verify the toolchain without deploying:
+
+```bash
+node --version
+npm --version
+aws --version
+sam --version
+npm --prefix server exec esbuild -- --version
+aws sts get-caller-identity
+```
+
+Use a named or short-lived local AWS identity where possible. These local
+credentials are for the deployment workstation only and are never placed in
+Lambda or Amplify.
+
 ### 1. Install or update AWS SAM CLI
 
 Follow the AWS SAM CLI installer for the deployment workstation, then verify:
@@ -189,6 +217,36 @@ aws secretsmanager describe-secret \
 ```
 
 Never pass the secret through SAM parameters, Git, Amplify, or logs.
+
+### 2a. Create or verify DynamoDB tables
+
+SAM references the production table but does not create it. Development and
+production tables must have String partition key `userId` and String sort key
+`interviewId`. For pay-per-request billing:
+
+```bash
+aws dynamodb create-table \
+  --region ap-south-1 \
+  --table-name InterviewAceInterviews-dev \
+  --attribute-definitions AttributeName=userId,AttributeType=S AttributeName=interviewId,AttributeType=S \
+  --key-schema AttributeName=userId,KeyType=HASH AttributeName=interviewId,KeyType=RANGE \
+  --billing-mode PAY_PER_REQUEST
+
+aws dynamodb create-table \
+  --region ap-south-1 \
+  --table-name InterviewAceInterviews \
+  --attribute-definitions AttributeName=userId,AttributeType=S AttributeName=interviewId,AttributeType=S \
+  --key-schema AttributeName=userId,KeyType=HASH AttributeName=interviewId,KeyType=RANGE \
+  --billing-mode PAY_PER_REQUEST
+```
+
+Run a create command only when that exact table is absent. Verify existing
+tables without changing them:
+
+```bash
+aws dynamodb describe-table --region ap-south-1 --table-name InterviewAceInterviews-dev
+aws dynamodb describe-table --region ap-south-1 --table-name InterviewAceInterviews
+```
 
 ### 3. Build with SAM
 
@@ -274,7 +332,7 @@ Health check:
 
 ```bash
 curl --fail \
-  "https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/health"
+  "https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/health"
 ```
 
 Expected body:
@@ -290,7 +348,7 @@ curl -i -X OPTIONS \
   -H "Origin: https://main.d1aqwxz5mscjq8.amplifyapp.com" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Authorization,Content-Type" \
-  "https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api/interview/generate"
+  "https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api/interview/generate"
 ```
 
 The response must not use `Access-Control-Allow-Origin: *`.
@@ -300,7 +358,7 @@ The response must not use `Access-Control-Allow-Origin: *`.
 Because the client already calls `/interview/...`, the exact Amplify value is:
 
 ```text
-https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api
+https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api
 ```
 
 Do not append another `/api`.
@@ -314,7 +372,7 @@ Console path:
 Set:
 
 ```dotenv
-VITE_API_BASE_URL=https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api
+VITE_API_BASE_URL=https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api
 ```
 
 Preserve all existing Cognito and OAuth variables.
@@ -350,3 +408,77 @@ Monitor Lambda `Duration`, `Errors`, `Throttles`, API latency, 5XX responses,
 and `AI_SERVICE_BUSY`. Do not log prompts, answers, tokens, or secret values.
 Prepare the asynchronous evaluation workflow if live evaluation regularly
 approaches the 24-second provider deadline.
+
+## Expected CloudFormation resources and outputs
+
+The stack creates or manages these logical resources (plus SAM/CloudFormation
+generated stage/deployment and role resources):
+
+- `InterviewAceApi`: Regional REST API named `interviewace-api`, stage `prod`
+- `InterviewAceFunction`: Lambda named `interviewace-api`
+- `InterviewAceApiPermission`: permission for this API to invoke the Lambda
+- Generated Lambda execution role and CloudWatch log group/runtime logs
+
+It does **not** create Cognito, DynamoDB tables, the Gemini secret, or Amplify.
+
+Actual deployed outputs:
+
+```text
+ApiGatewayUrl=https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod
+ApiBaseUrl=https://wbdxdn6su7.execute-api.ap-south-1.amazonaws.com/prod/api
+```
+
+Confirm from CloudFormation:
+
+```bash
+aws cloudformation describe-stacks \
+  --region ap-south-1 \
+  --stack-name interviewace-api-prod \
+  --query "Stacks[0].Outputs"
+```
+
+## Updates, rollback, and deletion
+
+Build and deploy an update with the saved configuration:
+
+```bash
+sam validate --lint --region ap-south-1
+sam build
+sam deploy
+```
+
+Review the CloudFormation change set before execution. If an update fails,
+inspect stack events and allow CloudFormation's automatic rollback to finish:
+
+```bash
+aws cloudformation describe-stack-events \
+  --region ap-south-1 \
+  --stack-name interviewace-api-prod
+```
+
+To return to a known version, check out/rebuild that reviewed application and
+template revision and run `sam deploy`; do not use destructive Git commands to
+discard uncommitted work. If CloudFormation is stuck in
+`UPDATE_ROLLBACK_FAILED`, investigate the failed resource before using the
+AWS-documented `continue-update-rollback` operation.
+
+Deleting the stack is destructive and removes the API, Lambda, and generated
+role, but not the externally managed DynamoDB tables, Cognito pool, Amplify
+application, or Secrets Manager secret:
+
+```bash
+sam delete --stack-name interviewace-api-prod --region ap-south-1
+```
+
+Run deletion only when intentionally decommissioning the backend. Update or
+remove the Amplify API base afterward to avoid calls to a deleted endpoint.
+
+## Cost considerations
+
+Lambda, API Gateway, DynamoDB on-demand, Secrets Manager, CloudWatch, Amplify,
+and Gemini each have independent pricing and quotas. The request-driven design
+avoids continuously running backend compute, but costs still grow with request
+count, execution duration/memory, generated tokens, stored results, logs, and
+frontend bandwidth/builds. Configure CloudWatch retention and AWS budgets,
+monitor retries and abusive traffic, and review current provider pricing before
+forecasting. No cost guarantee is implied.

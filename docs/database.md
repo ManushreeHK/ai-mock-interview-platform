@@ -1,371 +1,116 @@
-# 🗄️ Database Design
+# Database
 
-## Overview
+## Tables and isolation
 
-InterviewAce AI uses **Amazon DynamoDB** as its primary database.
+| Environment | Table |
+| --- | --- |
+| Local/development | `InterviewAceInterviews-dev` |
+| Production | `InterviewAceInterviews` |
 
-DynamoDB is a NoSQL database designed for high scalability, low latency, and seamless integration with AWS services.
+The table name is selected with `DYNAMODB_INTERVIEWS_TABLE`. The SAM template references the production table but does not create either table; they must already exist. Keeping table names separate prevents local writes from mixing with production data.
 
-The database stores:
+An email address is not a database identity. Records are partitioned by Cognito `sub`. If the same email exists in separate User Pools or as separate identities, its `sub` may differ and its records remain separate.
 
-- Interview Results
-- Dashboard Statistics (derived)
-- User Profiles (Future)
-- Resume Analysis (Future)
-- Subscription Data (Future)
+## Key schema
 
----
+| Attribute | Type | Role |
+| --- | --- | --- |
+| `userId` | String | Partition key; verified Cognito `sub` |
+| `interviewId` | String | Sort key; `<createdAt>#<UUID>` |
 
-# Design Philosophy
+`createdAt` is generated with `new Date().toISOString()`. `interviewId` is generated as:
 
-The database is designed around **access patterns**, not relationships.
-
-Goals:
-
-- Fast Queries
-- Minimal Scans
-- Cost Efficient
-- Highly Scalable
-- Simple Data Model
-
----
-
-# Current Database
-
-## Table
-
-```
-InterviewAce-Interviews
+```text
+<ISO-8601 timestamp>#<random UUID>
 ```
 
----
+Example:
 
-# Primary Keys
-
-## Partition Key
-
-```
-userId
+```text
+2026-08-01T12:34:56.789Z#550e8400-e29b-41d4-a716-446655440000
 ```
 
-Obtained from the authenticated AWS Cognito user.
+The fixed-width ISO prefix makes descending sort-key order equivalent to newest-first creation order, while the UUID avoids collisions at the same timestamp.
 
----
+## Completed-result item
 
-## Sort Key
-
-```
-interviewId
-```
-
-Example
-
-```
-2026-07-29T10:30:15Z#8c3e0b2f
-```
-
-The timestamp prefix keeps interview records naturally ordered.
-
----
-
-# Item Structure
-
-Example Interview
+`POST /api/interview/evaluate` writes one document only after Gemini output is parsed and validated:
 
 ```json
 {
-  "userId": "cognito-user-id",
-  "interviewId": "2026-07-29T10:30:15Z#8c3e0b2f",
-
+  "userId": "<COGNITO_SUB>",
+  "interviewId": "2026-08-01T12:34:56.789Z#<UUID>",
   "type": "technical",
-
-  "role": "Frontend Developer",
-
+  "role": "Backend Developer",
   "experience": "3-5 Years",
-
   "difficulty": "Medium",
-
-  "language": "JavaScript",
-
-  "questions": [
-    "...",
-    "..."
-  ],
-
-  "answers": [
-    "...",
-    "..."
-  ],
-
+  "language": "TypeScript",
+  "questions": ["Question text"],
+  "answers": ["Candidate answer"],
   "evaluation": {
-    "overallScore": 85,
-    "technicalScore": 90,
-    "communicationScore": 80,
-    "confidenceScore": 86,
-
-    "strengths": [],
-
-    "improvements": [],
-
-    "questionFeedback": []
+    "overallScore": 8.2,
+    "communication": 8,
+    "technicalKnowledge": 8.5,
+    "confidence": 8,
+    "strengths": ["Clear explanation"],
+    "weaknesses": ["Add an example"],
+    "questionEvaluation": [
+      {
+        "question": "Question text",
+        "score": 8.2,
+        "feedback": "Specific feedback"
+      }
+    ]
   },
-
-  "durationSeconds": 1200,
-
   "status": "completed",
-
-  "createdAt": "2026-07-29T10:30:15Z"
+  "createdAt": "2026-08-01T12:34:56.789Z"
 }
 ```
 
----
+The stored interview-type field is named `type`; the history API maps it to `interviewType`. Role, experience, difficulty, language, questions, and answers are the values submitted for evaluation. There is no separate aggregate or dashboard-metrics item.
 
-# Access Patterns
+## Writes
 
-The application currently needs to support the following queries.
+`server/src/repositories/interview-result.repository.ts` uses DynamoDB `PutItem` through `PutCommand`. Its condition requires both key attributes not to exist, preventing accidental replacement of an item with the same composite key.
 
----
+Only completed results are stored. An invalid AI response is rejected before the write. A write failure becomes `RESULT_SAVE_FAILED` and the client remains on the interview page with its in-memory answers available for retry.
 
-## 1. Save Interview
+## History access pattern
 
-```
-POST /api/interviews
-```
+History uses `Query`, never `Scan`:
 
-Operation
-
-```
-PutItem
-```
-
----
-
-## 2. Get Recent Interviews
-
-```
-GET /dashboard/recent
+```text
+userId = verified Cognito sub
+ScanIndexForward = false
+Limit = requested page size
+ExclusiveStartKey = decoded nextToken, when supplied
 ```
 
-Query
+The projection returns only keys, display metadata, status, and four score fields. Full questions, answers, feedback, strengths, and weaknesses are not returned by history.
 
-```
-Partition Key = userId
+The API default page size is 20; the maximum is 100. `LastEvaluatedKey` is encoded as an opaque base64url `nextToken`. Tokens embed the partition key and sort key, and the service rejects a token whose `userId` does not match the authenticated user. Clients must treat tokens as opaque.
 
-Sort Descending
+The Dashboard client retrieves every page at up to 100 records, re-sorts by `createdAt`, and derives totals and metrics locally. This is suitable for the current data volume but may require bounded time ranges or precomputed aggregates as histories grow.
 
-Limit = 5
-```
+## Score fields
 
-No table scan required.
+These stored numbers are validated as finite values in the inclusive `0`–`10` range:
 
----
+- `evaluation.overallScore`
+- `evaluation.communication`
+- `evaluation.technicalKnowledge`
+- `evaluation.confidence`
+- every `evaluation.questionEvaluation[].score`
 
-## 3. Get Dashboard Statistics
+History normalization revalidates the four projected scores and silently excludes malformed legacy items, while logging only the number excluded.
 
-```
-GET /dashboard/stats
-```
+## IAM
 
-Uses
+The production Lambda role defined by `template.yaml` has only:
 
-```
-Query by userId
-```
-
-Calculates
-
-- Total Interviews
-- Average Score
-- Best Score
-- Practice Time
-
-Future optimization may cache these values.
-
----
-
-## 4. Get Interview Details
-
-```
-GET /interviews/{id}
+```text
+dynamodb:PutItem
+dynamodb:Query
 ```
 
-Uses
-
-```
-userId
-interviewId
-```
-
-Returns a single interview.
-
----
-
-# Future Access Patterns
-
-- Filter by Interview Type
-- Filter by Difficulty
-- Filter by Date
-- Search Interviews
-
-These may require Global Secondary Indexes (GSIs).
-
----
-
-# Future Global Secondary Indexes
-
-## GSI 1
-
-Partition Key
-
-```
-userId
-```
-
-Sort Key
-
-```
-createdAt
-```
-
-Purpose
-
-- Recent Interviews
-- Date Filtering
-
----
-
-## GSI 2
-
-Partition Key
-
-```
-userId
-```
-
-Sort Key
-
-```
-type
-```
-
-Purpose
-
-Filter
-
-- Technical
-- Behavioral
-- Coding
-
----
-
-# Data Ownership
-
-Each interview belongs to one authenticated user.
-
-```
-1 User
-
-↓
-
-Many Interviews
-```
-
-Users cannot access interviews belonging to another user.
-
----
-
-# Data Validation
-
-Every interview should contain:
-
-- Interview Type
-- Role
-- Experience
-- Difficulty
-- Questions
-- Answers
-- Evaluation
-- Created Date
-
-Invalid requests should be rejected before writing to DynamoDB.
-
----
-
-# Security
-
-Never trust values sent from the frontend.
-
-The backend should always:
-
-- Verify Cognito JWT
-- Extract userId from JWT
-- Ignore userId sent by clients
-
----
-
-# Performance Guidelines
-
-Prefer
-
-```
-Query
-```
-
-Avoid
-
-```
-Scan
-```
-
-Scans become expensive as data grows.
-
----
-
-# Naming Conventions
-
-Table
-
-```
-InterviewAce-Interviews
-```
-
-Future Tables
-
-```
-InterviewAce-Profiles
-
-InterviewAce-Resumes
-
-InterviewAce-Subscriptions
-
-InterviewAce-Settings
-```
-
-Maintain consistent naming across AWS resources.
-
----
-
-# Backup Strategy
-
-Enable:
-
-- Point-in-Time Recovery (PITR)
-
-Recommended:
-
-- AWS Backup
-
----
-
-# Future Improvements
-
-Future versions may include:
-
-- Dashboard cache
-- Interview analytics
-- AI coaching history
-- Resume history
-- Coding submissions
-- Leaderboards
-
-The current schema is intentionally simple to support rapid MVP development while remaining scalable.
+These actions are scoped to the configured production table ARN. It has no `Scan`, delete, update, batch, table-management, or development-table permission. Local credentials should likewise be reduced to `PutItem` and `Query` on `InterviewAceInterviews-dev` where practical.

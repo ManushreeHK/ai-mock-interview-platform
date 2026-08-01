@@ -1,296 +1,112 @@
-# 🏗️ InterviewAce AI - System Architecture
+# Architecture
 
-## Overview
+## High-level design
 
-InterviewAce AI follows a modern client-server architecture.
+InterviewAce AI is a browser client plus a synchronous serverless API. AWS Amplify Hosting serves the compiled React application. The browser calls a Regional API Gateway REST API, which proxies requests to one Lambda function. `@codegenie/serverless-express` adapts API Gateway events to the same Express app used by the local Node.js server.
 
-The application consists of:
+```mermaid
+flowchart LR
+  User[Browser user]
+  Amplify[AWS Amplify Hosting]
+  Client[React / TypeScript / Vite]
+  APIGW[Regional API Gateway REST API]
+  Lambda[AWS Lambda<br/>Node.js 22 arm64]
+  Adapter[serverless-express]
+  Express[Express application]
+  Cognito[Amazon Cognito User Pool]
+  Secrets[AWS Secrets Manager]
+  Gemini[Google Gemini API]
+  DynamoDB[Amazon DynamoDB]
+  CloudWatch[Amazon CloudWatch]
 
-- React Frontend
-- Node.js + Express Backend
-- AWS Cognito Authentication
-- Google Gemini AI
-- AWS DynamoDB (Planned)
-
----
-
-# High-Level Architecture
-
-```text
-                    +----------------------+
-                    |      React App       |
-                    | (TypeScript + Vite)  |
-                    +----------+-----------+
-                               |
-                               | HTTPS REST APIs
-                               |
-                    +----------v-----------+
-                    |   Node.js + Express  |
-                    |      Backend API     |
-                    +----------+-----------+
-                               |
-          +--------------------+--------------------+
-          |                                         |
-          |                                         |
-+---------v---------+                    +----------v---------+
-|  Google Gemini AI |                    |   AWS DynamoDB     |
-| Question Generator|                    | Interview Storage  |
-+-------------------+                    +--------------------+
-                               |
-                               |
-                    +----------v-----------+
-                    |   AWS Cognito        |
-                    | Authentication       |
-                    +----------------------+
+  User --> Amplify --> Client
+  Client -->|HTTPS + Cognito access token| APIGW
+  APIGW -->|Lambda proxy, 28 s limit| Lambda
+  Lambda --> Adapter --> Express
+  Express -->|verify JWT| Cognito
+  Lambda -->|cold-start secret load| Secrets
+  Express -->|generate/evaluate, 24 s deadline| Gemini
+  Express -->|PutItem / Query| DynamoDB
+  Lambda -->|JSON logs and metrics| CloudWatch
 ```
 
----
+## Request flow
 
-# Frontend Architecture
+1. Amplify serves the Vite build and the browser initializes Amplify Auth.
+2. Cognito authenticates the user with email/password or federated Google OAuth.
+3. The Axios request interceptor obtains the current Cognito access token.
+4. The client sends the request through API Gateway with `Authorization: Bearer <access-token>`.
+5. API Gateway invokes `InterviewAceFunction` through its `/{proxy+}` Lambda proxy integration.
+6. `server/src/lambda.ts` loads the Gemini secret before dynamically importing the Express app on a cold start, then caches the adapter for warm invocations.
+7. Express applies CORS and JSON parsing. Interview routes verify the Cognito access token.
+8. The controller uses the verified `sub` for deduplication and all user-owned data operations.
+9. Generate requests call Gemini. Evaluate requests call Gemini, validate the response, and conditionally write a completed item to DynamoDB. History requests issue a DynamoDB `Query`.
+10. Lambda/API Gateway returns JSON to the browser; operational logs go to CloudWatch.
 
-The frontend is built using React with TypeScript.
+## Authentication flow
 
-Responsibilities:
+The browser uses Cognito's hosted OAuth flow with authorization code response type for Google, or Amplify's direct Cognito APIs for email/password. The API accepts Cognito access tokens, not ID tokens. `aws-jwt-verify` checks the configured User Pool, app client, `token_use=access`, signature, and expiry. The verified `sub` is the persistence partition key.
 
-- User Authentication
-- Dashboard
-- Interview Configuration
-- Interview Experience
-- Results Visualization
-- API Communication
+See [Authentication](authentication.md).
 
-The frontend contains **no business logic**.
+## Local and production environments
 
-Business logic should always remain inside the backend.
+| Concern | Local | Production |
+| --- | --- | --- |
+| Frontend | Vite at `http://localhost:5173` | Amplify at the production origin |
+| Backend entry | `server/src/server.ts`, Express listens on port 5000 | `server/src/lambda.ts`, Express adapter |
+| API base | `http://localhost:5000/api` | API Gateway `/prod/api` |
+| Data | `InterviewAceInterviews-dev` | `InterviewAceInterviews` |
+| AWS identity | Local AWS credential chain | Lambda execution-role credentials |
+| Gemini key | `server/.env` | Secrets Manager cold-start load |
+| CORS | Localhost plus configured origins in development | Configured Amplify origin |
 
----
+Both environments use Cognito and DynamoDB in `ap-south-1`; they differ in configuration, entry point, credentials, and table name.
 
-# Backend Architecture
+## Component responsibilities
 
-Backend is built using:
+### AWS Amplify Hosting
 
-- Node.js
-- Express.js
+`amplify.yml` runs `npm ci` and `npm run build` in `client/`, then publishes `client/dist`. Vite variables are compiled into the bundle, so changing an Amplify environment variable requires a rebuild.
 
-Responsibilities:
+### API Gateway
 
-- Authentication validation
-- AI communication
-- Interview generation
-- Interview evaluation
-- Save interview results
-- Dashboard statistics
-- Database access
+`template.yaml` creates an `AWS::Serverless::Api` with a Regional endpoint and `prod` stage. A proxy integration preserves Express paths. A mock `OPTIONS` integration answers browser preflight with the configured production origin, methods, and headers.
 
-The backend acts as the single source of truth.
+### Lambda and Express adapter
 
----
+`InterviewAceFunction` uses Node.js 22, ARM64, 1024 MB, a 60-second Lambda timeout, and JSON logging. SAM bundles `server/src/lambda.ts` with esbuild. The adapter translates API Gateway proxy events into Express requests. Local development imports exactly the same `server/src/app.ts` and calls `listen` only from `server/src/server.ts`.
 
-# Authentication Flow
+### Cognito
 
-Authentication is handled by AWS Cognito.
+Cognito owns accounts, verification, federated identity, sessions, and tokens. Express does not accept a caller-provided `userId`; the verifier supplies the user identity.
 
-Flow:
+### Gemini
 
-```text
-User Login
-      │
-      ▼
-AWS Cognito
-      │
-      ▼
-JWT Access Token
-      │
-      ▼
-Frontend Stores Token
-      │
-      ▼
-API Requests
-      │
-      ▼
-Backend Validates Token
-```
+`@google/genai` performs question generation and structured evaluation. Calls are synchronous and bounded by retry, fallback, and a 24-second total deadline. See [AI Reliability](ai-reliability.md).
 
-The backend should never trust a user ID sent from the frontend.
+### DynamoDB
 
-Instead, it should extract the user's identity from the verified Cognito token.
+One table per environment stores completed result documents. The key design supports descending, per-user history through `Query`; the application does not use `Scan`. See [Database](database.md).
 
----
+### Secrets Manager
 
-# Interview Flow
+The production secret is `interviewace/gemini-api-key`, stored as JSON containing `GEMINI_API_KEY`. Lambda has `GetSecretValue` only for this secret. The value is assigned to process memory before application configuration is imported.
 
-```text
-Create Interview
-        │
-        ▼
-Select Type
-        │
-        ▼
-Generate AI Questions
-        │
-        ▼
-Interview Session
-        │
-        ▼
-Voice Recording
-        │
-        ▼
-Speech Recognition
-        │
-        ▼
-Finish Interview
-        │
-        ▼
-AI Evaluation
-        │
-        ▼
-Save Interview
-        │
-        ▼
-Results Page
-```
+### CloudWatch
 
----
+Lambda emits platform metrics and JSON application logs through `AWSLambdaBasicExecutionRole`. AI retry logs contain model, attempt, status, and fallback state. Evaluation failure logs contain stage and error class, but not tokens, prompts, answers, or secret values.
 
-# Dashboard Flow
+## Why Lambda and API Gateway
 
-```text
-Dashboard Loads
-       │
-       ▼
-Fetch Dashboard Statistics
-       │
-       ▼
-Fetch Recent Interviews
-       │
-       ▼
-Display User Progress
-```
+This workload is request-driven and currently benefits from scale-to-zero and pay-per-request billing. Lambda also avoids maintaining container capacity, load balancing, and service scaling. An ECS-based continuously running Express service would be better suited to sustained traffic, long-lived connections, or consistently long work, but those requirements are not implemented here.
 
-Dashboard should always display real data fetched from the backend.
+## Why a Regional REST API
 
----
+The application needs tight control of its synchronous timeout budget. The REST API integration is explicitly set to 28 seconds, while Gemini has a 24-second whole-operation deadline, leaving time for Express and gateway serialization. The architecture notes in the repository selected REST API rather than HTTP API because HTTP API's integration timeout is fixed at approximately 30 seconds, while a Regional REST API timeout can be configured and may be raised later subject to AWS quota/throughput constraints. The current deployment does not raise it.
 
-# Data Flow
+The Lambda timeout is deliberately longer (60 seconds) than the API integration timeout, but client-visible synchronous work must finish inside the gateway limit.
 
-```text
-React
-   │
-   ▼
-Express API
-   │
-   ▼
-Gemini API
-   │
-   ▼
-Receive Evaluation
-   │
-   ▼
-Save Interview to DynamoDB
-   │
-   ▼
-Return Response
-   │
-   ▼
-Results Page
-```
+## When asynchronous evaluation may be needed
 
----
-
-# Current Pages
-
-- Landing Page
-- Login
-- Signup
-- Verify Email
-- Dashboard
-- Create Interview
-- Interview
-- Results
-
-Future:
-
-- Profile
-
----
-
-# Current Features
-
-## Authentication
-
-- Signup
-- Login
-- Logout
-- Email Verification
-
----
-
-## Dashboard
-
-- Statistics
-- Weekly Progress
-- Recent Interviews
-- AI Insights
-- Achievements
-
-(Currently using mock data.)
-
----
-
-## Interview
-
-- Technical Interview
-- Behavioral Interview
-- Coding Interview (UI)
-
-Voice Features:
-
-- Speech Recognition
-- Voice Recording
-- Interview Timer
-- Navigation
-- Auto Submission
-
----
-
-## Results
-
-Displays:
-
-- Overall Score
-- Technical Score
-- Communication Score
-- Confidence Score
-- Strengths
-- Improvements
-- Question Feedback
-
----
-
-# Design Principles
-
-InterviewAce AI follows these principles:
-
-- Clean Architecture
-- Separation of Concerns
-- Reusable Components
-- Scalable APIs
-- Mobile Responsive
-- Minimal UI
-- AI-First Experience
-- Type Safety with TypeScript
-
----
-
-# Future Architecture
-
-As the application grows, additional services may be added:
-
-- Resume Analysis
-- AI Coach
-- Coding Execution Service
-- Subscription Service
-- Email Notifications
-- Analytics
-
-The current architecture is intentionally simple to support rapid MVP development while allowing future expansion.
+Evaluation is synchronous today. If CloudWatch shows frequent latency near the Gemini or API Gateway boundary, or if richer evaluation needs more than the current budget, a future job design could return `202 Accepted`, process through a queue/worker Lambda, and expose job status. That API, queue, worker, and persistence state are not implemented and would be a contract change.
