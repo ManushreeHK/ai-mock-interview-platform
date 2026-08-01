@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: InterviewAce AI Lambda and API Gateway REST API
+
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+  CognitoUserPoolClientId:
+    Type: String
+  InterviewsTableName:
+    Type: String
+    Default: InterviewAceInterviews
+  FrontendOrigin:
+    Type: String
+    Default: https://main.d1aqwxz5mscjq8.amplifyapp.com
+  GeminiSecretName:
+    Type: String
+    Default: interviewace/gemini-api-key
+
+Resources:
+  InterviewAceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: interviewace-api
+      StageName: prod
+      EndpointConfiguration: REGIONAL
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          MetricsEnabled: true
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title: InterviewAce API
+          version: "1.0"
+        schemes:
+          - https
+        paths:
+          /{proxy+}:
+            parameters:
+              - name: proxy
+                in: path
+                required: true
+                type: string
+            x-amazon-apigateway-any-method:
+              produces:
+                - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub
+                  - arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations
+                  - FunctionArn: !GetAtt InterviewAceFunction.Arn
+                timeoutInMillis: 28000
+            options:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                "200":
+                  description: CORS preflight response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: !Sub "'${FrontendOrigin}'"
+                      method.response.header.Access-Control-Allow-Headers: "'Authorization,Content-Type'"
+                      method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+
+  InterviewAceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: interviewace-api
+      CodeUri: server/
+      Handler: src/lambda.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      MemorySize: 1024
+      Timeout: 60
+      LoggingConfig:
+        LogFormat: JSON
+        ApplicationLogLevel: INFO
+        SystemLogLevel: INFO
+      Environment:
+        Variables:
+          NODE_ENV: production
+          DYNAMODB_INTERVIEWS_TABLE: !Ref InterviewsTableName
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+          COGNITO_USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClientId
+          FRONTEND_URLS: !Ref FrontendOrigin
+          GEMINI_PRIMARY_MODEL: gemini-3.5-flash
+          GEMINI_FALLBACK_MODEL: gemini-3.5-flash-lite
+          GEMINI_REQUEST_TIMEOUT_MS: "24000"
+          GEMINI_SECRET_ID: !Ref GeminiSecretName
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Sid: InterviewAceProductionResults
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Query
+              Resource: !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${InterviewsTableName}
+            - Sid: ReadGeminiApiKey
+              Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${GeminiSecretName}-*
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/lambda.ts
+        Minify: true
+        Sourcemap: false
+        Target: es2022
+        Format: cjs
+        OutExtension:
+          - .js=.js
+
+  InterviewAceApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref InterviewAceFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${InterviewAceApi}/*/*/*
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway REST API invoke URL
+    Value: !Sub https://${InterviewAceApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/prod
+  ApiBaseUrl:
+    Description: VITE_API_BASE_URL value
+    Value: !Sub https://${InterviewAceApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/prod/api

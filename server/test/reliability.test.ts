@@ -149,6 +149,32 @@ test("does not retry a daily-quota 429", async () => {
   assert.equal(calls, 1);
 });
 
+test("maps the end-to-end Gemini deadline to AI_SERVICE_BUSY", async () => {
+  let calls = 0;
+
+  await assert.rejects(
+    generateWithFallback(
+      "prompt",
+      runtime(async (_model, _contents, signal) => {
+        calls += 1;
+        await new Promise<void>((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          });
+        });
+        return "unreachable";
+      }),
+      5
+    ),
+    (error: unknown) =>
+      error instanceof AiServiceError &&
+      error.statusCode === 503 &&
+      error.code === "AI_SERVICE_BUSY"
+  );
+
+  assert.equal(calls, 1);
+});
+
 test("coalesces concurrent duplicate operations", async () => {
   let calls = 0;
   let release: (() => void) | undefined;

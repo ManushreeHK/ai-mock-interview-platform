@@ -13,6 +13,8 @@ dist/
 **/dist/
 dist-ssr/
 **/dist-ssr/
+.aws-sam/
+samconfig.toml
 *.local
 
 # Editor directories and files

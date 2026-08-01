@@ -1,21 +1,83 @@
-# InterviewAce AI AWS deployment
+# InterviewAce AI serverless deployment
 
 Production architecture:
 
 - Frontend: AWS Amplify Hosting
-- Backend: Amazon ECS Express Mode
-- Container registry: Amazon ECR
+- Backend: Amazon API Gateway REST API and AWS Lambda
 - Database: Amazon DynamoDB (`InterviewAceInterviews`)
-- Authentication: Amazon Cognito
+- Authentication: Amazon Cognito access tokens verified by Express middleware
 - Secrets: AWS Secrets Manager
-- Logs: Amazon CloudWatch Logs
+- Logs and duration metrics: Amazon CloudWatch
 
-This guide prepares manual deployment only. It does not create or update AWS
-resources.
+This guide contains manual deployment steps only. It does not create or modify
+AWS resources until an operator explicitly runs `sam deploy`.
+
+## Why API Gateway REST API
+
+No production request-duration logs are available in this repository, and the
+Gemini tests use controlled mock calls rather than the live provider. The
+available Lambda adapter tests complete in approximately 1.1 seconds or less,
+but those values do not predict generation or evaluation latency.
+
+Before this change, the retry policy could wait 14 seconds in backoff and each
+provider call had no deadline. Generation or evaluation could therefore exceed
+29–30 seconds even with low quota usage. API Gateway HTTP APIs have a fixed
+30-second maximum integration timeout. This deployment uses a Regional REST API
+because its timeout can be explicitly controlled and can later be increased by
+quota request if production measurements justify it.
+
+Current synchronous limits:
+
+- Gemini end-to-end deadline: 24 seconds, including calls and retry sleeps
+- REST API Lambda integration timeout: 28 seconds
+- Lambda timeout: 60 seconds
+
+The application returns the existing `AI_SERVICE_BUSY` 503 response when the
+24-second Gemini deadline expires. This leaves four seconds for Express and API
+Gateway serialization before the integration deadline.
+
+The asynchronous evaluation design is not implemented because there are no
+live measurements showing regular deadline overruns and it would change the
+client contract. If CloudWatch shows frequent durations near 22–24 seconds,
+move evaluation to a job workflow before high traffic:
+
+```text
+POST /api/interview/evaluate -> 202 + jobId
+worker Lambda -> Gemini evaluation and DynamoDB save
+GET /api/interview/evaluation-status/:jobId -> job state/result
+```
+
+## Existing Express application
+
+Local development remains unchanged:
+
+```bash
+cd server
+npm run dev
+```
+
+The local backend remains `http://localhost:5000`, and the client continues to
+use:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+`server/src/server.ts` is the only file that calls `app.listen`. The Lambda
+entry `server/src/lambda.ts` wraps the same exported Express app with
+`@codegenie/serverless-express`. Routes, middleware, authentication, CORS,
+errors, and `/health` are not duplicated.
+
+`npm run build` produces both:
+
+```text
+server/dist/server.js
+server/dist/lambda.js
+```
 
 ## Environment separation
 
-Local development continues to use the ignored `server/.env` file:
+Local `server/.env` remains ignored and uses:
 
 ```dotenv
 NODE_ENV=development
@@ -24,336 +86,267 @@ DYNAMODB_INTERVIEWS_TABLE=InterviewAceInterviews-dev
 FRONTEND_URLS=http://localhost:5173
 ```
 
-The backend defaults to port 5000 locally and uses the AWS SDK default
-credential-provider chain, so a local AWS CLI profile can supply development
-credentials. Restrict that identity to the development table where practical.
+Local credentials may come from the AWS CLI/default provider chain. Restrict
+the local IAM identity to the development table where practical.
 
-Production uses the ECS task role and this table:
-
-```text
-InterviewAceInterviews
-```
-
-No access key or secret access key is configured in the ECS container. Even
-when the same Cognito subject exists in both environments, records remain
-isolated by the different DynamoDB table names.
-
-## Production container
-
-`server/Dockerfile` is a multi-stage Node 22 LTS build:
-
-1. The build stage installs locked dependencies and compiles TypeScript.
-2. The runtime stage installs production dependencies only.
-3. Only `package.json`, `package-lock.json`, production dependencies, and
-   `dist/` are present at runtime.
-4. The container runs as the image's unprivileged `node` user.
-5. The command is `node dist/server.js`.
-
-The Docker build context must be `server/`:
-
-```bash
-docker build -t interviewace-api:latest ./server
-```
-
-Local container verification:
-
-```bash
-docker run --rm -d --name interviewace-api-test \
-  -p 5000:5000 \
-  --env-file server/.env \
-  interviewace-api:latest
-
-curl --fail http://localhost:5000/health
-
-docker exec interviewace-api-test node -e \
-  "if (process.getuid?.() === 0) process.exit(1); console.log(process.getuid?.())"
-
-docker stop interviewace-api-test
-```
-
-The local `.env` is supplied only at runtime and is excluded by
-`server/.dockerignore`; it is not copied into the image.
-
-## Production environment variables
-
-Configure these as plain ECS container environment variables:
+Lambda receives these production variables from `template.yaml`:
 
 ```dotenv
 NODE_ENV=production
-AWS_REGION=ap-south-1
 DYNAMODB_INTERVIEWS_TABLE=InterviewAceInterviews
 COGNITO_USER_POOL_ID=<production pool id>
 COGNITO_USER_POOL_CLIENT_ID=<production client id>
 FRONTEND_URLS=https://main.d1aqwxz5mscjq8.amplifyapp.com
 GEMINI_PRIMARY_MODEL=gemini-3.5-flash
 GEMINI_FALLBACK_MODEL=gemini-3.5-flash-lite
-PORT=5000
+GEMINI_REQUEST_TIMEOUT_MS=24000
+GEMINI_SECRET_ID=interviewace/gemini-api-key
 ```
 
-`PORT=5000` matches the ECS container port. Do not configure
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, or `GEMINI_API_KEY` as plain-text
-environment variables. Inject `GEMINI_API_KEY` from Secrets Manager.
+Lambda supplies the reserved `AWS_REGION=ap-south-1` variable automatically;
+the template must not redefine that reserved name. No AWS access keys are
+configured. The AWS SDK uses temporary Lambda execution-role credentials.
 
-## IAM templates and role boundaries
+## AWS SAM resources
 
-Templates are stored in `deployment/`:
+The repository-root `template.yaml` defines:
 
-- `ecs-task-trust-policy.json`: trust for both ECS task roles
-- `ecs-task-role-policy.json`: application access to production DynamoDB
-- `ecs-task-execution-policy.json`: ECR pull, CloudWatch log delivery, and one
-  Gemini secret
-- `ecs-infrastructure-trust-policy.json`: ECS Express Mode infrastructure trust
+- `InterviewAceFunction`: Node.js 22, arm64, 1024 MB, 60-second Lambda
+- `InterviewAceApi`: Regional API Gateway REST API with stage `prod`
+- `/{proxy+}` Lambda proxy integration preserving every existing path
+- API Gateway mock `OPTIONS` integration for production CORS preflight
+- Lambda invoke permission scoped to this REST API
+- Lambda basic CloudWatch logging permissions
+- DynamoDB `PutItem` and `Query` on the production table only
+- Secrets Manager `GetSecretValue` on the Gemini secret only
+- outputs for the invoke URL and exact Amplify API base URL
 
-Replace every `<ACCOUNT_ID>` placeholder before creating policies.
+All runtime dependencies are bundled by SAM's esbuild integration. Development
+dependencies are build-time only and are not required by Lambda.
 
-### Application task role
+## IAM permissions
 
-Create `interviewace-api-task-role` with the trust policy from
-`ecs-task-trust-policy.json`. Attach `ecs-task-role-policy.json`. It permits
-only:
+The generated Lambda execution role allows:
 
 ```text
+logs:CreateLogGroup
+logs:CreateLogStream
+logs:PutLogEvents
 dynamodb:PutItem
 dynamodb:Query
+secretsmanager:GetSecretValue
 ```
 
-against:
+DynamoDB is restricted to:
 
 ```text
 arn:aws:dynamodb:ap-south-1:<ACCOUNT_ID>:table/InterviewAceInterviews
 ```
 
-The task role is used by application code through temporary task credentials.
-
-### Task execution role
-
-Create `interviewace-api-execution-role` with the same ECS task trust policy.
-Attach `ecs-task-execution-policy.json`. It permits ECS/Fargate to:
-
-- authenticate to ECR and pull only `interviewace-api` image layers;
-- write streams and events only to `/ecs/interviewace-api`;
-- retrieve only `interviewace/gemini-api-key` from Secrets Manager.
-
-The execution role is used by ECS, not by application code. If the secret uses
-a customer-managed KMS key, add narrowly scoped `kms:Decrypt`; it is not needed
-for the default Secrets Manager KMS key.
-
-### Express Mode infrastructure role
-
-Create `ecsInfrastructureRoleForExpressServices` with
-`ecs-infrastructure-trust-policy.json`, whose principal is
-`ecs.amazonaws.com`. Attach the AWS-managed service-role policy:
+Secrets Manager is restricted to the ARN for:
 
 ```text
-arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices
+interviewace/gemini-api-key
 ```
 
-This role lets ECS provision and manage Express Mode load balancing, security
-groups, HTTPS certificates, networking, and autoscaling. It is not the
-application task role and must not receive DynamoDB permissions.
-
-The administrator creating the service also needs `iam:PassRole` for the task,
-execution, and infrastructure roles, scoped with the appropriate passed-to
-service conditions.
+The development table, DynamoDB Scan, AWS access keys, and wildcard application
+data permissions are not included.
 
 ## Deployment order
 
-### 1. Review and commit code
+### 1. Install or update AWS SAM CLI
 
-Review the Dockerfile, `.dockerignore`, IAM templates, and this guide. Commit
-and push only after confirming no environment or credential files are staged.
+Follow the AWS SAM CLI installer for the deployment workstation, then verify:
 
-### 2. Create the Gemini secret
+```bash
+sam --version
+aws --version
+```
 
-1. Open **AWS Console → Secrets Manager → Secrets → Store a new secret**.
-2. Secret type: **Other type of secret**.
-3. Add key `GEMINI_API_KEY` and its production value.
-4. Encryption key: `aws/secretsmanager`, unless a customer-managed key is
-   specifically required.
+Configure an AWS CLI identity authorized to deploy CloudFormation, Lambda, API
+Gateway, IAM, and the referenced DynamoDB/Secrets Manager resources in
+`ap-south-1`.
+
+### 2. Create or verify the Gemini secret
+
+Console path:
+
+**AWS Console → Secrets Manager → Secrets → Store a new secret**
+
+1. Secret type: **Other type of secret**.
+2. Key: `GEMINI_API_KEY`.
+3. Value: production Gemini key.
+4. Encryption: default `aws/secretsmanager`, unless a managed KMS key is
+   intentionally required.
 5. Secret name: `interviewace/gemini-api-key`.
-6. Do not enable automatic rotation unless a compatible rotation workflow has
-   been prepared.
-7. Record the secret ARN without copying its value elsewhere.
 
-### 3. Create the ECR repository
-
-Set placeholders in the shell performing the deployment:
+CLI verification without retrieving the secret value:
 
 ```bash
-AWS_REGION=ap-south-1
-AWS_ACCOUNT_ID=<ACCOUNT_ID>
-ECR_REPOSITORY=interviewace-api
-IMAGE_TAG=<RELEASE_TAG>
+aws secretsmanager describe-secret \
+  --region ap-south-1 \
+  --secret-id interviewace/gemini-api-key
 ```
 
-Create the private repository:
+Never pass the secret through SAM parameters, Git, Amplify, or logs.
+
+### 3. Build with SAM
+
+From the repository root:
 
 ```bash
-aws ecr create-repository \
-  --region "$AWS_REGION" \
-  --repository-name "$ECR_REPOSITORY" \
-  --image-scanning-configuration scanOnPush=true \
-  --image-tag-mutability IMMUTABLE
+sam validate --lint --region ap-south-1
+sam build
 ```
 
-### 4. Build and push the backend image
-
-Authenticate Docker:
+Optional local API emulation after building:
 
 ```bash
-aws ecr get-login-password --region "$AWS_REGION" | \
-  docker login --username AWS --password-stdin \
-  "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+cd server
+npm run sam:build
+npm run sam:local
 ```
 
-Build, tag, and push:
+Regular local development does not require SAM.
+
+### 4. Deploy through a reviewed change set
+
+Copy the example configuration only if desired:
 
 ```bash
-docker build -t "$ECR_REPOSITORY:$IMAGE_TAG" ./server
-
-docker tag "$ECR_REPOSITORY:$IMAGE_TAG" \
-  "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
-
-docker push \
-  "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
+cp samconfig.toml.example samconfig.toml
 ```
 
-The resulting image URI is:
+Then run:
+
+```bash
+sam deploy --guided
+```
+
+Use:
 
 ```text
-<ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/interviewace-api:<RELEASE_TAG>
+Stack name: interviewace-api-prod
+Region: ap-south-1
+Confirm changes before deploy: Yes
+Allow SAM CLI IAM role creation: Yes
+Save arguments to samconfig.toml: Yes
 ```
 
-### 5. Create the ECS task role
+### 5. Supply production parameters
 
-1. Open **AWS Console → IAM → Roles → Create role**.
-2. Trusted entity: **AWS service**.
-3. Use case: **Elastic Container Service Task**.
-4. Role name: `interviewace-api-task-role`.
-5. Create a customer-managed policy from
-   `deployment/ecs-task-role-policy.json` after replacing `<ACCOUNT_ID>`.
-6. Attach only that application policy.
-
-### 6. Create or verify the task execution role
-
-1. Open **AWS Console → IAM → Roles → Create role**.
-2. Use case: **Elastic Container Service Task**.
-3. Role name: `interviewace-api-execution-role`.
-4. Create and attach the policy from
-   `deployment/ecs-task-execution-policy.json` after replacing `<ACCOUNT_ID>`.
-5. Confirm its secret resource resolves only to
-   `interviewace/gemini-api-key`.
-
-### 7. Create the Express Mode infrastructure role
-
-1. Open **AWS Console → IAM → Roles → Create role → Custom trust policy**.
-2. Paste `deployment/ecs-infrastructure-trust-policy.json`.
-3. Role name: `ecsInfrastructureRoleForExpressServices`.
-4. Attach AWS-managed policy
-   `AmazonECSInfrastructureRoleforExpressGatewayServices`.
-5. Do not attach the DynamoDB application policy.
-
-### 8. Create the ECS Express Mode backend service
-
-1. Switch the AWS Console region to **Asia Pacific (Mumbai), ap-south-1**.
-2. Open **Amazon ECS → Express mode**.
-3. Under **Let's set up your app**, enter the ECR image URI.
-4. Service name: `interviewace-api`.
-5. Public/private access: **Public**.
-6. Container port: `5000`.
-7. Health check path: `/health`.
-8. Task execution role: `interviewace-api-execution-role`.
-9. Infrastructure role: `ecsInfrastructureRoleForExpressServices`.
-10. Under additional configuration, task role:
-    `interviewace-api-task-role`.
-11. Starter compute: **1 vCPU** and **2 GB memory**.
-12. Autoscaling metric: **Average CPU Utilization**.
-13. Target: **60%**.
-14. Minimum tasks: `1`; maximum tasks: `20`.
-15. Enable CloudWatch logs using log group `/ecs/interviewace-api`.
-16. Use the default VPC/public networking unless the production network design
-    requires custom subnets and security groups.
-
-Express Mode provisions the public HTTPS endpoint and supporting load balancer.
-
-### 9. Configure environment variables and the Gemini secret
-
-Enter the plain environment variables listed above. Under container secrets:
-
-- Environment variable name: `GEMINI_API_KEY`
-- Value source: `interviewace/gemini-api-key`, key `GEMINI_API_KEY`
-
-Do not enter AWS credentials. The AWS SDK receives temporary credentials from
-`interviewace-api-task-role`.
-
-### 10. Verify health
-
-Wait until the service is active, then open:
+During the guided deployment provide:
 
 ```text
-https://<ECS_PUBLIC_URL>/health
+CognitoUserPoolId=<production pool id>
+CognitoUserPoolClientId=<production app client id>
+InterviewsTableName=InterviewAceInterviews
+FrontendOrigin=https://main.d1aqwxz5mscjq8.amplifyapp.com
+GeminiSecretName=interviewace/gemini-api-key
 ```
 
-Expected response:
+The DynamoDB table must already have:
+
+- partition key `userId`, String
+- sort key `interviewId`, String
+
+### 6. Confirm REST API creation
+
+SAM creates a Regional API Gateway REST API and `prod` stage. Console path:
+
+**AWS Console → API Gateway → APIs → interviewace-api → Stages → prod**
+
+Confirm the proxy integration timeout is 28,000 milliseconds and the API type
+is REST, not HTTP.
+
+### 7. Verify health and preflight
+
+Read the stack output:
+
+```bash
+aws cloudformation describe-stacks \
+  --region ap-south-1 \
+  --stack-name interviewace-api-prod \
+  --query "Stacks[0].Outputs"
+```
+
+Health check:
+
+```bash
+curl --fail \
+  "https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/health"
+```
+
+Expected body:
 
 ```json
 {"status":"ok"}
 ```
 
-Inspect **ECS service → Logs** and the `/ecs/interviewace-api` CloudWatch log
-group for startup failures. Logs must not contain secrets or tokens.
+Production preflight:
 
-### 11. Copy the ECS HTTPS URL
-
-Copy the unique Application URL shown by ECS Express Mode. Keep the `https://`
-scheme and omit a trailing slash when composing the API base URL.
-
-### 12. Update Amplify
-
-Open **AWS Console → Amplify → InterviewAce AI → Hosting → Environment
-variables** and set:
-
-```text
-VITE_API_BASE_URL=https://<ECS_PUBLIC_URL>/api
+```bash
+curl -i -X OPTIONS \
+  -H "Origin: https://main.d1aqwxz5mscjq8.amplifyapp.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Authorization,Content-Type" \
+  "https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api/interview/generate"
 ```
 
-Preserve all existing Cognito and OAuth variables:
+The response must not use `Access-Control-Allow-Origin: *`.
 
-- `VITE_AWS_REGION`
-- `VITE_COGNITO_USER_POOL_ID`
-- `VITE_COGNITO_USER_POOL_CLIENT_ID`
-- `VITE_COGNITO_DOMAIN`
-- `VITE_OAUTH_REDIRECT_SIGN_IN`
-- `VITE_OAUTH_REDIRECT_SIGN_OUT`
+### 8. Copy the API Gateway base URL
 
-### 13. Redeploy Amplify
+Because the client already calls `/interview/...`, the exact Amplify value is:
 
-Vite environment variables are embedded at build time. Redeploy the Amplify
-`main` branch after changing `VITE_API_BASE_URL`.
+```text
+https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api
+```
 
-### 14. Verify production CORS
+Do not append another `/api`.
 
-Confirm requests from
-`https://main.d1aqwxz5mscjq8.amplifyapp.com` succeed and an unknown browser
-origin is rejected. `FRONTEND_URLS` must contain an origin only, with no path.
+### 9. Update Amplify
 
-### 15. Test the complete production workflow
+Console path:
+
+**AWS Console → Amplify → InterviewAce AI → Hosting → Environment variables**
+
+Set:
+
+```dotenv
+VITE_API_BASE_URL=https://<API_ID>.execute-api.ap-south-1.amazonaws.com/prod/api
+```
+
+Preserve all existing Cognito and OAuth variables.
+
+### 10. Redeploy Amplify
+
+Vite variables are build-time configuration. Redeploy branch `main` after the
+API base URL changes.
+
+### 11. Test production
 
 - [ ] Email/password login
-- [ ] Google login through Cognito
-- [ ] Protected route access and refresh
+- [ ] Google login
+- [ ] Protected route refresh
 - [ ] Interview generation
 - [ ] Evaluation and Results
-- [ ] Result saved in `InterviewAceInterviews`
+- [ ] DynamoDB persistence in `InterviewAceInterviews`
 - [ ] Dashboard history and metrics after refresh
-- [ ] User-to-user history isolation
+- [ ] User history isolation
 - [ ] Logout
-- [ ] No Gemini key or AWS credential in browser requests or image layers
-- [ ] `/health` returns HTTP 200
+- [ ] Unknown CORS origin rejected
+- [ ] Browser contains no Gemini key or AWS credentials
 
-## Git hygiene
+### 12. Monitor duration and errors
 
-The root `.gitignore` excludes `node_modules`, `dist`, non-example `.env`
-files, logs, AWS credential directories, and private keys. The Docker build
-context independently excludes dependencies, build output, environment files,
-tests, logs, Git metadata, and documentation.
+Console paths:
+
+- **AWS Console → Lambda → interviewace-api → Monitor**
+- **AWS Console → CloudWatch → Log groups → /aws/lambda/interviewace-api**
+- **AWS Console → API Gateway → interviewace-api → Stages → prod**
+
+Monitor Lambda `Duration`, `Errors`, `Throttles`, API latency, 5XX responses,
+and `AI_SERVICE_BUSY`. Do not log prompts, answers, tokens, or secret values.
+Prepare the asynchronous evaluation workflow if live evaluation regularly
+approaches the 24-second provider deadline.

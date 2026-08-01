@@ -6,6 +6,7 @@ type ServerEnv = {
   geminiApiKey: string;
   geminiPrimaryModel: string;
   geminiFallbackModel: string;
+  geminiRequestTimeoutMs: number;
   cognitoUserPoolId: string;
   cognitoUserPoolClientId: string;
   awsRegion: string;
@@ -36,6 +37,16 @@ function readPort(): number {
   }
 
   return port;
+}
+
+function readPositiveInteger(name: string, fallback: number) {
+  const value = Number(process.env[name]?.trim() || fallback);
+
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+
+  return value;
 }
 
 function readNodeEnv(): ServerEnv["nodeEnv"] {
@@ -117,6 +128,10 @@ export const env: ServerEnv = Object.freeze({
   geminiFallbackModel: optionalEnv(
     "GEMINI_FALLBACK_MODEL",
     "gemini-3.5-flash-lite"
+  ),
+  geminiRequestTimeoutMs: readPositiveInteger(
+    "GEMINI_REQUEST_TIMEOUT_MS",
+    24_000
   ),
   cognitoUserPoolId: requireEnv("COGNITO_USER_POOL_ID"),
   cognitoUserPoolClientId: requireEnv(

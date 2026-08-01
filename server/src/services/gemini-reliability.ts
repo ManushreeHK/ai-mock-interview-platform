@@ -26,11 +26,15 @@ class RetryExhaustedError extends Error {
   }
 }
 
-type GenerateRequest = (model: string, contents: string) => Promise<string>;
+type GenerateRequest = (
+  model: string,
+  contents: string,
+  signal: AbortSignal
+) => Promise<string>;
 
 type RetryRuntime = {
   generate: GenerateRequest;
-  sleep: (milliseconds: number) => Promise<void>;
+  sleep: (milliseconds: number, signal: AbortSignal) => Promise<void>;
   random: () => number;
   logAttempt: (details: {
     model: string;
@@ -43,12 +47,26 @@ type RetryRuntime = {
 const ai = new GoogleGenAI({ apiKey: env.geminiApiKey });
 
 const defaultRuntime: RetryRuntime = {
-  async generate(model, contents) {
-    const response = await ai.models.generateContent({ model, contents });
+  async generate(model, contents, signal) {
+    const response = await ai.models.generateContent({
+      model,
+      contents,
+      config: { abortSignal: signal },
+    });
     return response.text ?? "";
   },
-  sleep(milliseconds) {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  sleep(milliseconds, signal) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, milliseconds);
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          reject(signal.reason);
+        },
+        { once: true }
+      );
+    });
   },
   random: Math.random,
   logAttempt(details) {
@@ -198,7 +216,8 @@ async function generateWithModel(
   model: string,
   contents: string,
   fallback: boolean,
-  runtime: RetryRuntime
+  runtime: RetryRuntime,
+  signal: AbortSignal
 ): Promise<GeminiGenerationResult> {
   for (
     let attempt = 1;
@@ -207,7 +226,7 @@ async function generateWithModel(
   ) {
     try {
       return {
-        text: await runtime.generate(model, contents),
+        text: await runtime.generate(model, contents, signal),
         model,
         fallback,
       };
@@ -235,7 +254,8 @@ async function generateWithModel(
       }
 
       await runtime.sleep(
-        backoffDelay(attempt, shortRetryDelay ?? 0, runtime.random)
+        backoffDelay(attempt, shortRetryDelay ?? 0, runtime.random),
+        signal
       );
     }
   }
@@ -251,16 +271,41 @@ export type GeminiGenerationResult = {
 
 export async function generateWithFallback(
   contents: string,
-  runtime: RetryRuntime = defaultRuntime
+  runtime: RetryRuntime = defaultRuntime,
+  timeoutMs: number = env.geminiRequestTimeoutMs
+): Promise<GeminiGenerationResult> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  timer.unref();
+
+  try {
+    return await generateWithFallbackBeforeDeadline(
+      contents,
+      runtime,
+      controller.signal
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function generateWithFallbackBeforeDeadline(
+  contents: string,
+  runtime: RetryRuntime,
+  signal: AbortSignal
 ): Promise<GeminiGenerationResult> {
   try {
     return await generateWithModel(
       env.geminiPrimaryModel,
       contents,
       false,
-      runtime
+      runtime,
+      signal
     );
   } catch (error) {
+    if (signal.aborted) {
+      throw busyError(env.geminiPrimaryModel, false);
+    }
     if (
       !(error instanceof RetryExhaustedError)
     ) {
@@ -279,9 +324,13 @@ export async function generateWithFallback(
       env.geminiFallbackModel,
       contents,
       true,
-      runtime
+      runtime,
+      signal
     );
   } catch (error) {
+    if (signal.aborted) {
+      throw busyError(env.geminiFallbackModel, true);
+    }
     if (error instanceof RetryExhaustedError) {
       throw error.status === 429
         ? quotaError(env.geminiFallbackModel, true)
