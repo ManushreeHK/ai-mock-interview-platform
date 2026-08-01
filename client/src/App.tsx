@@ -10,6 +10,10 @@ import ResultsPage from "./pages/Results/ResultsPage";
 import PublicLayout from "./components/layout/PublicLayout"
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard/DashboardPage";
+import ProfilePage from "./pages/Profile/ProfilePage";
+import SettingsPage from "./pages/Settings/SettingsPage";
+import SubscriptionPage from "./pages/Subscription/SubscriptionPage";
+import HelpPage from "./pages/Help/HelpPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ProtectedAppErrorBoundary from "./components/routes/ProtectedAppErrorBoundary";
 
@@ -56,6 +60,38 @@ function App() {
 
       <ResultsPage />
         </ProtectedRoute>}
+    />
+    <Route
+      path="/profile"
+      element={
+        <ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/settings"
+      element={
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/subscription"
+      element={
+        <ProtectedRoute>
+          <SubscriptionPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/help"
+      element={
+        <ProtectedRoute>
+          <HelpPage />
+        </ProtectedRoute>
+      }
     />
   </Route>
 

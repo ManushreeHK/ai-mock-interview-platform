@@ -18,6 +18,8 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 | Results | Real saved evaluation rendered from router state |
 | DynamoDB persistence | Conditional `PutItem` of completed results |
 | Real dashboard metrics | Derived from paginated `Query` history, not mock data |
+| Profile menu | Accessible authenticated dropdown with normalized profile data and logout |
+| Account placeholders | Protected profile, settings, subscription, and help routes; unfinished actions are labeled Coming Soon |
 | Amplify deployment | Production frontend URL is active/verified |
 | Lambda deployment | Node.js 22 arm64 function through serverless Express adapter |
 | API Gateway | Regional REST API with 28-second integration timeout |
@@ -30,7 +32,6 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 | --- | --- |
 | Route protection | `/interview` is not wrapped by `ProtectedRoute`; backend APIs are protected |
 | Behavioral selection | Form option exists, but there is no behavioral-specific prompt/evaluation flow |
-| Resume input | Required file selection exists, but the file is not uploaded or processed |
 | Interview history navigation | Sidebar links to `/history`, but App routes contain no history page |
 | In-flight recovery | Answers survive an evaluation error while mounted, not refresh/navigation |
 
@@ -50,4 +51,3 @@ Status is based on repository inspection as of 2026-08-01 and the verified produ
 - Application/API rate limiting
 
 UI text or dependencies that mention a capability do not make it implemented. This status intentionally distinguishes selectable/advertised placeholders from working flows.
-

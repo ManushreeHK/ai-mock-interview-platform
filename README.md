@@ -9,7 +9,8 @@ The email/password and Google sign-in flows, question generation, interview sess
 ## Implemented features
 
 - Cognito email/password registration, email confirmation, login, logout, and Google federation
-- Centralized client authentication state and protected dashboard, creation, and results routes
+- Centralized client authentication state and protected dashboard, creation, results, profile, settings, subscription, and help routes
+- Accessible authenticated profile dropdown with account details, keyboard navigation, protected page links, and logout
 - Configurable interview generation for role, experience, difficulty, domain, language, and position
 - Ten Gemini-generated questions
 - Typed answers and browser Web Speech API transcription with a 20-minute interview timer
@@ -20,7 +21,7 @@ The email/password and Google sign-in flows, question generation, interview sess
 
 ## Screens and user flow
 
-The implemented public routes are `/`, `/login`, `/signup`, and `/verify`. Authenticated application routes are `/dashboard`, `/create-interview`, and `/results`. The `/interview` route carries generated questions in router state and is not currently wrapped by `ProtectedRoute`; its generate/evaluate API calls still require a valid Cognito access token.
+The implemented public routes are `/`, `/login`, `/signup`, and `/verify`. Authenticated application routes are `/dashboard`, `/create-interview`, `/results`, `/profile`, `/settings`, `/subscription`, and `/help`. Settings, paid subscription options, and support actions are explicitly Coming Soon placeholders. The `/interview` route carries generated questions in router state and is not currently wrapped by `ProtectedRoute`; its generate/evaluate API calls still require a valid Cognito access token.
 
 ```text
 Landing -> sign up/sign in -> Dashboard -> Create Interview
@@ -180,7 +181,6 @@ sam build
 - No full interview-history page or route; recent history appears on the dashboard.
 - `/interview` itself is not protected by `ProtectedRoute`, though its API operations are authenticated.
 - Behavioral can be selected in the form but uses the same generic generation/evaluation pipeline; there is no behavioral-specific mode.
-- Resume upload is required by the form but is not sent to or processed by the backend.
 - Generated questions, active interview state, and result navigation state are not persisted across browser refreshes.
 - Speech input depends on browser Web Speech API support and per-origin microphone permission.
 - Duplicate suppression is in-memory, per warm Lambda instance, and only covers concurrent identical requests.

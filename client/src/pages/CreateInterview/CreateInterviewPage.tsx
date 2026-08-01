@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
-import FileUpload from "../../components/ui/FileUpload";
 import Button from "../../components/ui/Button";
 import api from "../../services/api";
 import InterviewType from "../../components/InterviewType";
@@ -19,7 +18,6 @@ function CreateInterviewPage() {
     domain: "",
     language: "",
     position: "",
-    resume: null as File | null,
   });
 
   const [errors, setErrors] = useState({
@@ -29,7 +27,6 @@ function CreateInterviewPage() {
     domain: "",
     language: "",
     position: "",
-    resume: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,20 +88,6 @@ function CreateInterviewPage() {
     }));
   };
 
-  const handleResumeChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      resume: e.target.files?.[0] || null,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      resume: "",
-    }));
-  };
-
   const handleSubmit = async () => {
     if (generationInFlight.current) return;
 
@@ -115,7 +98,6 @@ function CreateInterviewPage() {
       domain: "",
       language: "",
       position: "",
-      resume: "",
     };
 
     if (!formData.role)
@@ -137,9 +119,6 @@ function CreateInterviewPage() {
 
     if (!formData.position.trim())
       newErrors.position = "Position is required.";
-
-    if (!formData.resume)
-      newErrors.resume = "Please upload your resume.";
 
     setErrors(newErrors);
 
@@ -338,12 +317,6 @@ return (
                 e.target.value
               )
             }
-          />
-
-          <FileUpload
-            label="Resume"
-            error={errors.resume}
-            onChange={handleResumeChange}
           />
 
           <Button

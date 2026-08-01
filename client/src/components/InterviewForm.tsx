@@ -1,5 +1,4 @@
 import { Button, Input } from "./ui";
-import FileUpload from "./ui/FileUpload";
 import Select from "./ui/Select";
 
 
@@ -12,7 +11,6 @@ type Props = {
     domain: string;
     language: string;
     position: string;
-    resume: File | null;
   };
 
   errors: {
@@ -22,7 +20,6 @@ type Props = {
     domain: string;
     language: string;
     position: string;
-    resume: string;
   };
 
   loading: boolean;
@@ -30,10 +27,6 @@ type Props = {
   handleSelectChange: (
     field: keyof Props["formData"],
     value: string
-  ) => void;
-
-  handleResumeChange: (
-    e: React.ChangeEvent<HTMLInputElement>
   ) => void;
 
   handleSubmit: () => void;
@@ -88,7 +81,6 @@ export default function InterviewForm({
   errors,
   loading,
   handleSelectChange,
-  handleResumeChange,
   handleSubmit,
 }: Props) {
   return (
@@ -230,12 +222,6 @@ export default function InterviewForm({
               e.target.value
             )
           }
-        />
-
-        <FileUpload
-          label="Resume (Optional)"
-          error={errors.resume}
-          onChange={handleResumeChange}
         />
 
         <Button

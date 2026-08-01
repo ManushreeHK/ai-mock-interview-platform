@@ -60,7 +60,7 @@ Profile claims are for display. API authorization and data ownership use the ver
 
 ## Protected routes
 
-`ProtectedRoute` displays a loading state while authentication is resolving, redirects unauthenticated visitors to `/login`, and renders children for authenticated sessions. It currently wraps `/dashboard`, `/create-interview`, and `/results`.
+`ProtectedRoute` displays a loading state while authentication is resolving, redirects unauthenticated visitors to `/login`, and renders children for authenticated sessions. It currently wraps `/dashboard`, `/create-interview`, `/results`, `/profile`, `/settings`, `/subscription`, and `/help`.
 
 Implementation note: `/interview` is not wrapped by `ProtectedRoute`. It normally receives questions from the protected creation page through router state, and its evaluate API request remains protected server-side. Direct route protection is a known gap.
 
@@ -94,4 +94,3 @@ Navigation logout actions call Amplify `signOut`. The auth Hub `signedOut` handl
 - Configure only necessary OAuth scopes (`openid email profile` currently).
 - Token expiry is enforced by `aws-jwt-verify`; the frontend relies on Amplify for session refresh.
 - CORS is not authentication. The API verifies every protected call independently.
-
