@@ -12,10 +12,10 @@ export default function FeedbackSummary({
 }: FeedbackSummaryProps) {
   return (
     <section>
-      <h2 className="text-2xl font-bold text-slate-900">
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
         Feedback summary
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Key takeaways from your interview performance
       </p>
 

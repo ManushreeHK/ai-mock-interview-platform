@@ -76,8 +76,8 @@ function ResultsPage() {
         className="flex min-h-[60vh] items-center justify-center"
       >
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
-          <p className="mt-4 font-medium text-slate-600">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600 dark:border-blue-950 dark:border-t-blue-400" />
+          <p className="mt-4 font-medium text-slate-600 dark:text-slate-300">
             Loading saved results…
           </p>
         </div>
@@ -91,13 +91,13 @@ function ResultsPage() {
   ) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <div className="max-w-lg rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">
+        <div className="max-w-lg rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {historical.status === "not-found"
               ? "Interview not found"
               : "Unable to load results"}
           </h1>
-          <p className="mt-3 text-slate-600">{historical.message}</p>
+          <p className="mt-3 text-slate-600 dark:text-slate-300">{historical.message}</p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             {historical.status === "error" && (
               <button
@@ -111,7 +111,7 @@ function ResultsPage() {
             <button
               type="button"
               onClick={() => navigate("/history")}
-              className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-700 hover:bg-slate-50"
+              className="min-h-11 rounded-xl border border-slate-300 px-5 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Back to History
             </button>
@@ -130,11 +130,11 @@ function ResultsPage() {
   if (!result) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-3xl font-bold text-slate-900">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             No results found
           </h2>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             Complete an interview to see your report.
           </p>
           <button

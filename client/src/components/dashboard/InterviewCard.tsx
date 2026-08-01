@@ -1,100 +1,26 @@
-import {
-  ArrowRight,
-  Calendar,
-  Gauge,
-  Code2,
-  MessageSquare,
-  Mic,
-} from "lucide-react";
-import clsx from "clsx";
+import { Calendar, Gauge } from "lucide-react";
+import { Link } from "react-router-dom";
 
-type InterviewStatus = "Excellent" | "Good" | "Fair";
+type InterviewCardProps = { interviewId: string; role: string; type: string; score: number; date: string; difficulty: string };
 
-type InterviewCardProps = {
-  role: string;
-  type: string;
-  score: number;
-  status: InterviewStatus;
-  date: string;
-  difficulty: string;
-};
-
-export default function InterviewCard({
-  role,
-  type,
-  score,
-  status,
-  date,
-  difficulty,
-}: InterviewCardProps) {
-  const normalizedType = type.toLowerCase();
-  const Icon =
-    normalizedType === "technical"
-      ? Mic
-      : normalizedType === "behavioral"
-      ? MessageSquare
-      : Code2;
-
+export default function InterviewCard({ interviewId, role, type, score, date, difficulty }: InterviewCardProps) {
   return (
-    <div className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
-      <div className="flex items-start justify-between">
-        <div className="flex gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-            <Icon size={28} />
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              {role}
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              {type} Interview
-            </p>
-
-            <div className="mt-4 flex items-center gap-5 text-sm text-slate-500">
-              <div className="flex items-center gap-1">
-                <Calendar size={15} />
-                {date}
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Gauge size={15} />
-                {difficulty}
-              </div>
-            </div>
+    <article className="py-4 first:pt-2 last:pb-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold capitalize text-blue-700 dark:bg-blue-950 dark:text-blue-300">{type}</span>
+          <h3 className="mt-2 break-words text-sm font-semibold text-slate-900 dark:text-slate-100">{role}</h3>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" aria-hidden="true" />{date}</span>
+            <span className="flex items-center gap-1"><Gauge className="h-3.5 w-3.5" aria-hidden="true" />{difficulty}</span>
           </div>
         </div>
-
-        <div className="text-right">
-          <p className="text-3xl font-bold text-slate-900">
-            {score.toFixed(1)}/10
-          </p>
-
-          <span
-            className={clsx(
-              "mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-              {
-                "bg-green-100 text-green-700":
-                  status === "Excellent",
-
-                "bg-blue-100 text-blue-700":
-                  status === "Good",
-
-                "bg-amber-100 text-amber-700":
-                  status === "Fair",
-              }
-            )}
-          >
-            {status}
-          </span>
-
-          <button className="mt-6 flex items-center gap-1 text-sm font-medium text-blue-600 transition group-hover:translate-x-1">
-            View Report
-            <ArrowRight size={16} />
-          </button>
+        <div className="shrink-0 text-right">
+          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{score.toFixed(1)}<span className="text-xs font-medium text-slate-400">/10</span></p>
+          <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true"><div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(100, score * 10)}%` }} /></div>
+          <Link to={`/history/${encodeURIComponent(interviewId)}`} className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-300">View Results</Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

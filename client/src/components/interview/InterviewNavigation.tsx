@@ -28,7 +28,7 @@ export default function InterviewNavigation({
     currentQuestion === totalQuestions - 1;
 
   return (
-    <div className="mt-8 flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-6 flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:mt-8 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h3 className="font-semibold text-slate-900">
           Question {currentQuestion + 1} of {totalQuestions}
@@ -39,7 +39,7 @@ export default function InterviewNavigation({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[390px]:grid-cols-2 sm:flex sm:flex-wrap">
         <Button
           type="button"
           variant="secondary"

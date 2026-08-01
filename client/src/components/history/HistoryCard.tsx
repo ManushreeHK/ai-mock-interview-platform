@@ -40,7 +40,7 @@ export default function HistoryCard({
               {interview.difficulty}
             </span>
           </div>
-          <h2 className="mt-3 truncate text-xl font-bold text-slate-900">
+          <h2 className="mt-3 break-words text-xl font-bold text-slate-900 dark:text-slate-100">
             {interview.role}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
@@ -55,7 +55,7 @@ export default function HistoryCard({
           <Score label="Confidence" value={interview.confidence} />
         </div>
 
-        <div className="flex items-center justify-between gap-5 border-t border-slate-100 pt-4 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
+        <div className="flex flex-col items-stretch gap-4 border-t border-slate-100 pt-4 dark:border-slate-700 min-[390px]:flex-row min-[390px]:items-center min-[390px]:justify-between xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
           <div className="text-center">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Overall
@@ -70,7 +70,7 @@ export default function HistoryCard({
           </div>
           <Link
             to={`/history/${encodeURIComponent(interview.interviewId)}`}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label={`View results for ${interview.role} completed ${formatHistoryDate(interview.createdAt)}`}
           >
             View Results

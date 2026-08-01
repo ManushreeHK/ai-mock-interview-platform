@@ -30,7 +30,7 @@ export default function Navbar() {
       className={`sticky top-0 z-50 border-b transition ${
         scrolled
           ? "border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/90"
-          : "border-transparent bg-white/95 dark:bg-slate-950/95"
+          : "border-transparent bg-white/80 backdrop-blur-xl dark:bg-[#050816]/80"
       }`}
     >
       <nav className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
@@ -48,7 +48,7 @@ export default function Navbar() {
             <a
               key={href}
               href={href}
-              className="text-sm font-medium text-slate-600 transition hover:text-slate-950"
+              className="text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
             >
               {label}
             </a>
@@ -58,7 +58,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 lg:flex">
           <Link
             to="/login"
-            className="px-3 py-2 text-sm font-semibold text-slate-700 transition hover:text-blue-600"
+            className="px-3 py-2 text-sm font-semibold text-slate-700 transition hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400"
           >
             Login
           </Link>

@@ -231,10 +231,10 @@ const handleFinish = () => {
 };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-6 py-10 dark:bg-slate-950">
-      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-10 shadow-xl">
+    <div className="min-h-screen bg-slate-100 px-3 py-4 dark:bg-slate-950 sm:px-5 sm:py-6 lg:px-6 lg:py-10">
+      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-4 shadow-xl dark:bg-slate-900 sm:p-6 lg:p-10">
 
-        <div className="mb-10 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
           <InterviewHeader
             role={interviewDetails?.role || "Developer"}
           />

@@ -4,14 +4,14 @@ type InterviewHeaderProps = {
 
 function InterviewHeader({ role }: InterviewHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-8">
+    <div className="min-w-0">
 
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 sm:text-3xl lg:text-4xl">
           InterviewAce AI
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="mt-2 break-words text-gray-500 dark:text-slate-400">
           {role} Mock Interview
         </p>
       </div>

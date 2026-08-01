@@ -2,9 +2,6 @@ import {
   Home,
   Mic,
   History,
-  Code2,
-  MessageSquare,
-  Settings,
 } from "lucide-react";
 
 export const navigation = [
@@ -22,23 +19,5 @@ export const navigation = [
     label: "Interview History",
     path: "/history",
     icon: History,
-  },
-  {
-    label: "Coding Practice",
-    path: "#",
-    icon: Code2,
-    disabled: true,
-  },
-  {
-    label: "Behavioral",
-    path: "#",
-    icon: MessageSquare,
-    disabled: true,
-  },
-  {
-    label: "Settings",
-    path: "#",
-    icon: Settings,
-    disabled: true,
   },
 ];

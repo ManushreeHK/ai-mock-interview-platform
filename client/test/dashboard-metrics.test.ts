@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { InterviewHistoryItem } from "../src/types/interview-history.ts";
 import { calculateDashboardMetrics } from "../src/utils/dashboardMetrics.ts";
@@ -81,4 +82,43 @@ test("malformed score records are ignored", () => {
   assert.equal(metrics.totalInterviews, 1);
   assert.equal(metrics.averageScore, 8);
   assert.equal(metrics.bestScore, 8);
+});
+
+test("dashboard redesign keeps real metrics, navigation, and responsive regions", () => {
+  const page = readFileSync("src/pages/Dashboard/DashboardPage.tsx", "utf8");
+  const welcome = readFileSync("src/components/dashboard/WelcomeBanner.tsx", "utf8");
+  const progress = readFileSync("src/components/dashboard/ProgressSummaryCard.tsx", "utf8");
+  const stats = readFileSync("src/components/dashboard/StatsGrid.tsx", "utf8");
+  const weekly = readFileSync("src/components/dashboard/WeeklyProgress.tsx", "utf8");
+  const recent = readFileSync("src/components/dashboard/RecentInterviews.tsx", "utf8");
+
+  assert.match(page, /calculateDashboardMetrics\(history\)/);
+  assert.match(page, /lg:grid-cols-3/);
+  assert.match(page, /xl:grid-cols-5/);
+  for (const section of ["WelcomeBanner", "ProgressSummaryCard", "StatsGrid", "WeeklyProgress", "RecentInterviews"]) {
+    assert.match(page, new RegExp(`<${section}`));
+  }
+  const sectionPositions = ["WelcomeBanner", "ProgressSummaryCard", "StatsGrid", "WeeklyProgress", "RecentInterviews"]
+    .map((section) => page.indexOf(`<${section}`));
+  assert.deepEqual(sectionPositions, [...sectionPositions].sort((a, b) => a - b));
+  for (const legacySection of ["QuickActions", "AIInsights", "Achievements"]) {
+    assert.doesNotMatch(page, new RegExp(legacySection));
+  }
+  assert.match(welcome, /to="\/create-interview"/);
+  assert.match(welcome, /to="\/history"/);
+  assert.match(welcome, /aria-hidden="true"/);
+  assert.doesNotMatch(welcome, /behavioral, and coding/i);
+  for (const field of ["totalInterviews", "averageScore", "currentStreak", "bestScore", "interviewsThisWeek"]) {
+    assert.match(progress, new RegExp(`metrics\\.${field}`));
+  }
+  for (const stat of ["Total Interviews", "Average Score", "Best Score", "Current Streak"]) {
+    assert.match(stats, new RegExp(`title="${stat}"`));
+  }
+  assert.match(weekly, /Weekly Progress/);
+  assert.match(recent, /Recent Interviews/);
+  assert.match(recent, /to="\/history"/);
+  assert.match(recent, /View All/);
+  assert.match(recent, /interviews\.slice\(0, 4\)/);
+  assert.match(recent, /Complete your first interview/);
+  assert.doesNotMatch(recent, /question count|duration/i);
 });

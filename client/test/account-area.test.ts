@@ -230,6 +230,17 @@ test("sidebar switcher uses the shared provider and accessible real buttons", ()
   assert.match(settings, /useTheme\(\)/);
 });
 
+test("authenticated sidebar contains only core v1 navigation entries", () => {
+  const navigation = readFileSync("src/constants/navigation.ts", "utf8");
+  for (const label of ["Dashboard", "New Interview", "Interview History"]) {
+    assert.match(navigation, new RegExp(`label: "${label}"`));
+  }
+  for (const removed of ["Coding Practice", "Behavioral", "Settings"]) {
+    assert.doesNotMatch(navigation, new RegExp(`label: "${removed}"`));
+  }
+  assert.doesNotMatch(navigation, /disabled:|Code2|MessageSquare/);
+});
+
 test("subscription usage is real and plans contain no checkout action", () => {
   assert.equal(
     countInterviewsThisMonth(

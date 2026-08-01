@@ -13,7 +13,7 @@ export default function InterviewTimer({
   const formattedSeconds = String(seconds).padStart(2, "0");
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
+    <div className="flex w-fit items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-5">
       <div className="rounded-full bg-blue-100 p-2">
         <Clock
           size={20}

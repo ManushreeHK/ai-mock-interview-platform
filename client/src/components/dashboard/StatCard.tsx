@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { Minus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type Props = {
@@ -17,34 +17,34 @@ export default function StatCard({
   iconBg,
 }: Props) {
   return (
-    <div className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {title}
           </p>
 
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">
+          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {value}
-          </h2>
+          </p>
 
           <div className="mt-3 flex items-center gap-2">
-            <TrendingUp size={14} className="text-emerald-500" />
-            <span className="text-sm font-medium text-slate-500">
+            <Minus size={14} className="text-slate-400" aria-hidden="true" />
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {subtitle}
             </span>
           </div>
         </div>
 
         <div
-          className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconBg}`}
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
         >
           <Icon
-            size={26}
-            className="text-white"
+            size={22}
+            aria-hidden="true"
           />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

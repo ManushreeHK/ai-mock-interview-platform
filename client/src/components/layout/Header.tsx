@@ -1,48 +1,40 @@
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import { Input } from "../ui";
 import { getGreeting } from "../../utils/getGreeting";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import ProfileDropdown from "../profile/ProfileDropdown";
 
+export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
+  const greeting = getGreeting();
+  const user = useCurrentUser();
 
-
-export default function Header() {
-    const greeting = getGreeting();
-    const user = useCurrentUser();
   return (
-    <header className="relative z-50 flex h-20 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-900 sm:px-8">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {greeting}, {user.displayName} 👋
+    <header className="relative z-50 flex min-h-[4.5rem] items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 dark:border-slate-700 dark:bg-slate-900 sm:px-5 lg:px-6">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <button type="button" onClick={onMenuClick} aria-label="Open navigation" aria-controls="app-sidebar" className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 lg:hidden">
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </button>
+        <div className="min-w-0">
+        <h1 className="truncate text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg xl:text-xl">
+          {greeting}, {user.displayName}
         </h1>
-
-       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-  Track your interview journey and improve every day.
-</p>
+        <p className="mt-0.5 hidden text-xs text-slate-500 dark:text-slate-400 sm:block">
+          Track your interview journey and improve every day.
+        </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
-        <div className="relative hidden w-72 lg:block">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-
-          <Input
-            placeholder="Search..."
-            className="pl-10"
-          />
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2 xl:gap-3">
+        <div className="relative hidden w-48 xl:block 2xl:w-64">
+          <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <Input aria-label="Search dashboard" placeholder="Search dashboard" className="py-2.5 pl-10" />
         </div>
-
         <div className="relative">
-  <button aria-label="Notifications" className="rounded-xl border border-slate-200 bg-white p-3 transition-all duration-300 hover:border-blue-200 hover:bg-slate-50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
-    <Bell size={20} className="text-slate-700 dark:text-slate-200" />
-  </button>
-
-  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-    3
-  </span>
-</div>
+          <button type="button" aria-label="Notifications" className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-slate-200 bg-white transition hover:border-blue-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+            <Bell size={19} className="text-slate-700 dark:text-slate-200" aria-hidden="true" />
+          </button>
+          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">3</span>
+        </div>
         <ProfileDropdown />
       </div>
     </header>

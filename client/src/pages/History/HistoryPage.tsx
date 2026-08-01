@@ -149,7 +149,7 @@ export default function HistoryPage() {
         </div>
         <Link
           to="/create-interview"
-          className="inline-flex min-h-11 w-fit items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:w-fit"
         >
           <Plus className="h-5 w-5" aria-hidden="true" />
           New Interview
@@ -159,7 +159,7 @@ export default function HistoryPage() {
       {!isLoading && !error && items.length > 0 && (
         <section
           aria-label="Loaded interview summary"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
         >
           {[
             ["Interviews loaded", summary.total],
@@ -172,10 +172,10 @@ export default function HistoryPage() {
           ].map(([label, value]) => (
             <div
               key={label}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5"
             >
               <p className="text-sm text-slate-500">{label}</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+              <p className="mt-2 break-words text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">{value}</p>
             </div>
           ))}
         </section>

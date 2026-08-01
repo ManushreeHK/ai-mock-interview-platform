@@ -19,7 +19,7 @@ export default function RecordingSection({
   voiceEnabled = true,
 }: RecordingSectionProps) {
   return (
-    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:mt-8 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
@@ -49,6 +49,7 @@ export default function RecordingSection({
             variant="danger"
             leftIcon={<Square size={17} />}
             onClick={onStop}
+            className="w-full sm:w-auto"
           >
             Stop Recording
           </Button>
@@ -57,6 +58,7 @@ export default function RecordingSection({
             type="button"
             leftIcon={<Mic size={18} />}
             onClick={onStart}
+            className="w-full sm:w-auto"
           >
             Start Recording
           </Button>
@@ -67,7 +69,7 @@ export default function RecordingSection({
         value={answer}
         onChange={(event) => onAnswerChange(event.target.value)}
         placeholder="Click Start Recording and begin speaking..."
-        className="mt-6 min-h-44 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-5 text-base leading-7 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+        className="mt-6 min-h-40 w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 p-4 text-base leading-7 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:bg-slate-800 sm:min-h-44 sm:p-5"
       />
 
       {isListening && (

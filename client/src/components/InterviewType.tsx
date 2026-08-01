@@ -33,7 +33,7 @@ export default function InterviewType({
 }: InterviewTypeProps) {
   return (
     <div>
-      <div className="mt-6 grid gap-6 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
         {interviewTypes.map((type) => {
           const Icon = type.icon;
 
@@ -42,7 +42,7 @@ export default function InterviewType({
               key={type.id}
               onClick={() => onChange(type.id)}
               className={clsx(
-                "rounded-2xl border p-6 text-left transition-all duration-200",
+                "min-h-11 rounded-2xl border p-5 text-left transition-all duration-200 sm:p-6",
                 value === type.id
                   ? "border-blue-600 bg-blue-50 shadow-lg"
                   : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-md"

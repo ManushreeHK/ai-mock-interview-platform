@@ -3,9 +3,7 @@ import RecentInterviews from "../../components/dashboard/RecentInterviews";
 import WelcomeBanner from "../../components/dashboard/WelcomeBanner";
 import StatsGrid from "../../components/dashboard/StatsGrid";
 import WeeklyProgress from "../../components/dashboard/WeeklyProgress";
-import AIInsights from "../../components/dashboard/AIInsights";
-import QuickActions from "../../components/dashboard/QuickActions";
-import Achievements from "../../components/dashboard/Achievements";
+import ProgressSummaryCard from "../../components/dashboard/ProgressSummaryCard";
 import { fetchInterviewHistory } from "../../services/interviewHistory";
 import type { InterviewHistoryItem } from "../../types/interview-history";
 import { calculateDashboardMetrics } from "../../utils/dashboardMetrics";
@@ -50,8 +48,11 @@ function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <WelcomeBanner metrics={!isLoading && !error ? metrics : undefined} />
+    <div className="space-y-6">
+      <div className="grid items-stretch gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2"><WelcomeBanner /></div>
+        <ProgressSummaryCard metrics={!isLoading && !error ? metrics : undefined} />
+      </div>
 
       {isLoading ? (
         <div
@@ -80,23 +81,12 @@ function Dashboard() {
       )}
 
       {!isLoading && !error && (
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid items-start gap-6 xl:grid-cols-5">
+          <div className="xl:col-span-3">
             <WeeklyProgress data={metrics.weeklyProgress} />
           </div>
-          <AIInsights insights={metrics.insights} />
+          <div className="xl:col-span-2"><RecentInterviews interviews={history} /></div>
         </div>
-      )}
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <QuickActions />
-        </div>
-        {!isLoading && !error && <Achievements metrics={metrics} />}
-      </div>
-
-      {!isLoading && !error && (
-        <RecentInterviews interviews={history} />
       )}
     </div>
   );

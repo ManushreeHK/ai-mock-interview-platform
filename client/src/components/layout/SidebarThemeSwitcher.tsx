@@ -18,7 +18,7 @@ export default function SidebarThemeSwitcher() {
   const { themePreference, resolvedTheme, setThemePreference } = useTheme();
 
   return (
-    <fieldset className="border-t border-slate-200 px-4 py-3 dark:border-slate-700">
+    <fieldset className="border-t border-slate-200 px-4 py-2.5 dark:border-slate-700">
       <legend className="sr-only">Appearance</legend>
       <div
         className="grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"

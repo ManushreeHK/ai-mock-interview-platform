@@ -8,8 +8,8 @@ export default function FinalCTA() {
     status === "authenticated" ? "/create-interview" : "/login";
 
   return (
-    <section className="px-5 py-24 sm:px-6 lg:px-8">
-      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-slate-950 px-6 py-20 text-center text-white shadow-2xl sm:px-12">
+    <section className="bg-white px-5 py-24 dark:bg-[#050816] sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] border border-blue-900/50 bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 px-6 py-20 text-center text-white shadow-2xl shadow-blue-950/20 sm:px-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,.28),transparent_35%),radial-gradient(circle_at_80%_80%,rgba(99,102,241,.22),transparent_35%)]" />
         <div className="relative mx-auto max-w-3xl">
           <Sparkles className="mx-auto text-blue-400" size={28} />
@@ -22,7 +22,7 @@ export default function FinalCTA() {
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               to={startPath}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3.5 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-blue-400"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:-translate-y-0.5 hover:brightness-110"
             >
               Start Free Interview <ArrowRight size={18} />
             </Link>

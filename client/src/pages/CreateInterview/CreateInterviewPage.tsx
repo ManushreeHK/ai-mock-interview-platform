@@ -170,14 +170,14 @@ function CreateInterviewPage() {
   };
 
 return (
-  <div className="space-y-8">
+  <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
 
     {/* Page Header */}
 <div className="mb-8">
   <div className="flex items-center gap-3">
     <Sparkles className="h-7 w-7 text-blue-600" />
 
-    <h1 className="text-3xl font-bold text-gray-900">
+    <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 sm:text-3xl">
       Create Your AI Interview
     </h1>
   </div>
@@ -193,7 +193,7 @@ return (
     <div className="grid gap-8 xl:grid-cols-3">
 
       {/* Left Side */}
-      <div className="xl:col-span-2 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6 xl:col-span-2 xl:p-8">
 
         <h2 className="mb-8 text-2xl font-bold text-slate-900">
           Interview Details
@@ -251,7 +251,7 @@ return (
               Difficulty
             </label>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {difficulties.map((difficulty) => (
                 <button
                   key={difficulty}
@@ -347,7 +347,7 @@ return (
 
       {/* Right Side */}
 
-      <div className="sticky top-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6 xl:sticky xl:top-8">
 
         <h2 className="text-xl font-bold">
           Interview Summary
@@ -410,9 +410,9 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="flex justify-between border-b border-slate-100 pb-3">
+    <div className="flex min-w-0 justify-between gap-4 border-b border-slate-100 pb-3 dark:border-slate-700">
       <span className="text-slate-500">{label}</span>
-      <span className="font-semibold capitalize">
+      <span className="min-w-0 break-words text-right font-semibold capitalize">
         {value}
       </span>
     </div>

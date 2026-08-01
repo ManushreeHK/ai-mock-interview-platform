@@ -22,10 +22,10 @@ export default function ScoreOverview({
   return (
     <section>
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
           Score overview
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           A quick look at your performance across key areas
         </p>
       </div>

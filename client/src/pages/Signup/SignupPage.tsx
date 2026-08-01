@@ -29,10 +29,10 @@ function Signup() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-950">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-8 dark:bg-slate-950">
       <form
         onSubmit={handleSignup}
-        className="w-96 rounded-xl bg-white p-8 shadow-lg"
+        className="w-full max-w-96 rounded-xl bg-white p-5 shadow-lg dark:bg-slate-900 sm:p-8"
       >
         <h1 className="mb-6 text-center text-3xl font-bold">
           Create Account

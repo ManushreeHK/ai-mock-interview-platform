@@ -1,10 +1,33 @@
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 export default function AppLayout() {
   const { status, profile } = useAuth();
+  const location = useLocation();
+  const [sidebarState, setSidebarState] = useState({ open: false, path: location.pathname });
+  const sidebarOpen = sidebarState.open && sidebarState.path === location.pathname;
+  const closeSidebar = () => setSidebarState({ open: false, path: location.pathname });
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSidebarState({ open: false, path: location.pathname });
+      }
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [location.pathname, sidebarOpen]);
 
   if (status === "loading") {
     return (
@@ -39,13 +62,13 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      <Sidebar />
+    <div className="flex min-h-screen min-w-0 bg-slate-50 dark:bg-slate-950">
+      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
 
-      <div className="flex flex-1 flex-col">
-        <Header />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header onMenuClick={() => setSidebarState({ open: true, path: location.pathname })} />
 
-        <main className="flex-1 p-8">
+        <main className="min-w-0 flex-1 p-3 sm:p-5 lg:p-6 xl:p-7">
           <Outlet />
         </main>
       </div>
