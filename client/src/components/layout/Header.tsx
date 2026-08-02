@@ -1,5 +1,4 @@
-import { Bell, Menu, Search } from "lucide-react";
-import { Input } from "../ui";
+import { Menu } from "lucide-react";
 import { getGreeting } from "../../utils/getGreeting";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import ProfileDropdown from "../profile/ProfileDropdown";
@@ -24,17 +23,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2 xl:gap-3">
-        <div className="relative hidden w-48 xl:block 2xl:w-64">
-          <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <Input aria-label="Search dashboard" placeholder="Search dashboard" className="py-2.5 pl-10" />
-        </div>
-        <div className="relative">
-          <button type="button" aria-label="Notifications" className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-slate-200 bg-white transition hover:border-blue-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
-            <Bell size={19} className="text-slate-700 dark:text-slate-200" aria-hidden="true" />
-          </button>
-          <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">3</span>
-        </div>
+      <div className="flex shrink-0 items-center">
         <ProfileDropdown />
       </div>
     </header>

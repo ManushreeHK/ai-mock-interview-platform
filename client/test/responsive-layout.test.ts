@@ -11,6 +11,8 @@ test("authenticated shell uses an accessible mobile drawer", () => {
 
   assert.match(header, /aria-label="Open navigation"/);
   assert.match(header, /aria-controls="app-sidebar"/);
+  assert.doesNotMatch(header, /Search dashboard|Notifications|\bBell\b|\bSearch\b/);
+  assert.match(header, /<ProfileDropdown \/>/);
   assert.match(sidebar, /id="app-sidebar"/);
   assert.match(sidebar, /-translate-x-full/);
   assert.match(sidebar, /lg:translate-x-0/);

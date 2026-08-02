@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test test/dashboard-metrics.test.ts test/profile-dropdown.test.ts test/interview-history.test.ts test/account-area.test.ts test/results-theme.test.ts test/landing-premium.test.ts test/responsive-layout.test.ts",
+    "test": "node --experimental-strip-types --test test/dashboard-metrics.test.ts test/profile-dropdown.test.ts test/interview-history.test.ts test/account-area.test.ts test/results-theme.test.ts test/landing-premium.test.ts test/responsive-layout.test.ts test/interview-type-availability.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

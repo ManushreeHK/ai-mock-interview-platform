@@ -53,9 +53,7 @@ function CreateInterviewPage() {
   ];
 
   const difficulties = ["Easy", "Medium", "Hard"];
-  const [interviewType, setInterviewType] = useState<string>(
-    accountDefaults.defaultInterviewType
-  );
+  const [interviewType, setInterviewType] = useState<string>("technical");
 
   const domains = [
     "Web Development",
@@ -177,10 +175,13 @@ return (
   <div className="flex items-center gap-3">
     <Sparkles className="h-7 w-7 text-blue-600" />
 
-    <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 sm:text-3xl">
-      Create Your AI Interview
-    </h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 sm:text-3xl">
+      Create Your Technical Interview
+      </h1>
   </div>
+  <p className="mt-2 text-slate-600 dark:text-slate-400">
+    Configure a realistic AI-powered technical mock interview.
+  </p>
 </div>
 
     {/* Interview Type */}
@@ -357,7 +358,7 @@ return (
 
           <SummaryRow
             label="Interview"
-            value={interviewType}
+            value="Technical"
           />
 
           <SummaryRow
