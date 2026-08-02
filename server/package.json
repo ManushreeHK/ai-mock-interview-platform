@@ -7,7 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test test/reliability.test.ts test/evaluation.test.ts test/history.test.ts test/lambda.test.ts",
+    "test": "node --require ./test/node-user-info.cjs --import tsx --test test/reliability.test.ts test/evaluation.test.ts test/history.test.ts test/lambda.test.ts test/authentication.test.ts test/secrets.test.ts test/request-validation.test.ts",
+    "lint": "tsc --noEmit",
     "sam:build": "sam build --template-file ../template.yaml --build-dir ../.aws-sam/build --cache-dir ../.aws-sam/cache",
     "sam:local": "sam local start-api --template-file ../.aws-sam/build/template.yaml"
   },

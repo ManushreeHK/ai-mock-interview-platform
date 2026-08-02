@@ -8,6 +8,10 @@ import InterviewType from "../../components/InterviewType";
 import { Sparkles } from "lucide-react";
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 import { loadSettings } from "../../utils/settings";
+import {
+  hasTechnicalInterviewFormErrors,
+  validateTechnicalInterviewForm,
+} from "../../utils/technicalInterviewForm";
 
 function CreateInterviewPage() {
   const navigate = useNavigate();
@@ -93,42 +97,11 @@ function CreateInterviewPage() {
   const handleSubmit = async () => {
     if (generationInFlight.current) return;
 
-    const newErrors = {
-      role: "",
-      experience: "",
-      difficulty: "",
-      domain: "",
-      language: "",
-      position: "",
-    };
-
-    if (!formData.role)
-      newErrors.role = "Please select a role.";
-
-    if (!formData.experience)
-      newErrors.experience = "Please select experience.";
-
-    if (!formData.difficulty)
-      newErrors.difficulty = "Please select difficulty.";
-
-    if (interviewType !== "behavioral") {
-      if (!formData.domain)
-        newErrors.domain = "Please select domain.";
-
-      if (!formData.language)
-        newErrors.language = "Please select programming language.";
-    }
-
-    if (!formData.position.trim())
-      newErrors.position = "Position is required.";
+    const newErrors = validateTechnicalInterviewForm(formData);
 
     setErrors(newErrors);
 
-    const hasErrors = Object.values(newErrors).some(
-      (error) => error !== ""
-    );
-
-    if (hasErrors) return;
+    if (hasTechnicalInterviewFormErrors(newErrors)) return;
 
     try {
       generationInFlight.current = true;

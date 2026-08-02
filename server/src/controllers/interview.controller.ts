@@ -41,10 +41,43 @@ function sendAiError(res: Response, error: unknown): boolean {
   return true;
 }
 
-export const generateInterview = async (
-  req: Request,
-  res: Response
-) => {
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isNonEmptyStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
+}
+
+function sendInvalidInterviewRequest(res: Response) {
+  res.status(400).json({
+    error: {
+      code: "INVALID_INTERVIEW_REQUEST",
+      message: "The interview request payload is invalid.",
+    },
+  });
+}
+
+type GenerateOperation = typeof generateInterviewQuestions;
+
+export function createGenerateInterviewHandler(
+  generateOperation: GenerateOperation = generateInterviewQuestions
+) {
+  return async (req: Request, res: Response) => {
+    const body = req.body as Record<string, unknown> | undefined;
+    if (
+      !body ||
+      !isNonEmptyString(body.role) ||
+      !isNonEmptyString(body.experience) ||
+      !isNonEmptyString(body.difficulty) ||
+      !isNonEmptyString(body.domain) ||
+      !isNonEmptyString(body.language) ||
+      !isNonEmptyString(body.position)
+    ) {
+      sendInvalidInterviewRequest(res);
+      return;
+    }
+
   try {
     const {
       role,
@@ -74,7 +107,7 @@ Return only the questions as a numbered list.
         "generate",
         req.body
       ),
-      () => generateInterviewQuestions(prompt)
+      () => generateOperation(prompt)
     );
 
     res.status(200).json({
@@ -89,7 +122,10 @@ Return only the questions as a numbered list.
       message: "Failed to generate interview.",
     });
   }
-};
+  };
+}
+
+export const generateInterview = createGenerateInterviewHandler();
 
 type EvaluationOperation = (
   input: EvaluateInterviewInput
@@ -165,6 +201,23 @@ export function createEvaluateInterviewHandler(
   logFailure: (error: unknown) => void = logEvaluationFailure
 ) {
   return async (req: Request, res: Response) => {
+  const body = req.body as Record<string, unknown> | undefined;
+  if (
+    !body ||
+    !isNonEmptyString(body.type) ||
+    !isNonEmptyString(body.role) ||
+    !isNonEmptyString(body.experience) ||
+    !isNonEmptyString(body.difficulty) ||
+    !isNonEmptyString(body.language) ||
+    !isNonEmptyStringArray(body.questions) ||
+    !Array.isArray(body.answers) ||
+    !body.answers.every((answer) => typeof answer === "string") ||
+    body.answers.length !== body.questions.length
+  ) {
+    sendInvalidInterviewRequest(res);
+    return;
+  }
+
   try {
     const {
       type,
