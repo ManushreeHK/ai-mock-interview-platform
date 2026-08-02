@@ -85,7 +85,7 @@ Resources:
     Properties:
       FunctionName: interviewace-api
       CodeUri: server/
-      Handler: src/lambda.handler
+      Handler: lambda.handler
       Runtime: nodejs22.x
       Architectures:
         - arm64
